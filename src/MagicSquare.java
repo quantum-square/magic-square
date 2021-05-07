@@ -1,13 +1,17 @@
+import java.util.Arrays;
+
 public class MagicSquare {
 
     private int[][] population;
     private boolean[] fixed;
+    private boolean enableDebug;
     private final int gridSize;
     private final int populationSize;
     private final int sum;
 
-    public MagicSquare(int gridSize, int populationSize, boolean[] fixed, int[] initialState) {
-        this(gridSize, populationSize);
+    public MagicSquare(int gridSize, int populationSize, boolean[] fixed,
+                       int[] initialState, boolean enableDebug) {
+        this(gridSize, populationSize, enableDebug);
         this.fixed = fixed.clone();
 
         for (int i = 0; i < populationSize; i++){
@@ -16,8 +20,13 @@ public class MagicSquare {
     }
 
     public MagicSquare(int gridSize, int populationSize) {
+        this(gridSize, populationSize, false);
+    }
+
+    public MagicSquare(int gridSize, int populationSize, boolean enableDebug) {
         this.gridSize = gridSize;
         this.populationSize = populationSize;
+        this.enableDebug = enableDebug;
         population = new int[populationSize][gridSize*gridSize];
         this.fixed = new boolean[gridSize*gridSize];
         for (int i = 0; i < populationSize; i++){
@@ -31,29 +40,71 @@ public class MagicSquare {
     public void startGeneticAlgorithm(int generationSize, double pMut){
         for (int i = 0; i < generationSize; i++) {
             int[][] newPopulation = new int[populationSize][];
+            int[][] selectionPool = getSelectionPool();
             for (int j = 0; j < populationSize; j++) {
-                int[] individualX = randomSelection();
-                int[] individualY = randomSelection();
+                int[] individualX = randomSelection(selectionPool);
+                int[] individualY = randomSelection(selectionPool);
                 int[] child = reproduce(individualX, individualY);
-                if(Math.random() < pMut)
+                if (Math.random() < pMut)
                     mutate(child);
                 newPopulation[j] = child;
             }
             population = newPopulation;
 
+            int minfitness = Integer.MAX_VALUE;
             for (int j = 0; j < populationSize; j++) {
-                if(calculateFitness(population[j]) == 0){
+                int fitness = calculateFitness(population[j]);
+                if(fitness == 0){
                     System.out.println("Current generation: " + i);
                     printSquare(population[j]);
                     return;
                 }
+                else if(fitness < minfitness){
+                    minfitness = fitness;
+                }
+            }
+            if (enableDebug) {
+                System.out.println("Generation: " + i);
+                System.out.println("Minimum fitness: " + minfitness);
             }
         }
     }
 
-    public int[] randomSelection(){
-        int x = (int)(Math.random() * populationSize);
-        return population[x];
+    public int[][] getSelectionPool(){
+        PopulationFitness[] pf = new PopulationFitness[populationSize];
+        for (int i = 0; i < populationSize; i++)
+            pf[i] = new PopulationFitness(population[i], calculateFitness(population[i]));
+        Arrays.sort(pf);
+        printSquare(pf[0].population);
+        int[][] selectionPool = new int[populationSize / 2][];
+        for (int i = 0; i < populationSize / 2; i++) {
+            selectionPool[i] = pf[i].population;
+        }
+        return selectionPool;
+    }
+
+    private static class PopulationFitness implements Comparable<PopulationFitness>{
+        int[] population;
+        int fitness;
+
+        public PopulationFitness(int[] population, int fitness){
+            this.population = population;
+            this.fitness = fitness;
+        }
+
+        @Override
+        public int compareTo(PopulationFitness o) {
+            if (this.fitness < o.fitness)
+                return -1;
+            else if (this.fitness > o.fitness)
+                return 1;
+            return 0;
+        }
+    }
+
+    public int[] randomSelection(int[][] selectionPool){
+        int x = (int) (Math.random() * populationSize/2);
+        return selectionPool[x];
     }
 
     public int[] reproduce(int[] x, int[] y){
@@ -66,10 +117,12 @@ public class MagicSquare {
         invX[r] = invY[r];
         invY[r] = temp;
 
-        if(Math.random() < 0.5)
-            return getOriginSequence(invX);
+        int[] child1 = getOriginSequence(invX);
+        int[] child2 = getOriginSequence(invY);
+        if(calculateFitness(child1) < calculateFitness(child2))
+            return child1;
         else
-            return getOriginSequence(invY);
+            return child2;
     }
 
     private int[] getInversionSequence(int[] arr){
@@ -147,7 +200,7 @@ public class MagicSquare {
 
     public void printSquare(int[] arr){
         for (int k = 0; k < arr.length; k++) {
-            System.out.print(arr[k] + " ");
+            System.out.printf("%4d ", arr[k]);
             if(k % gridSize == gridSize-1)
                 System.out.println();
         }
