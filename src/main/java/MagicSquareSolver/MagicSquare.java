@@ -1,3 +1,5 @@
+package MagicSquareSolver;
+
 import java.util.Arrays;
 
 public class MagicSquare {

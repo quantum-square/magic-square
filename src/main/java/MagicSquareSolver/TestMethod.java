@@ -1,3 +1,5 @@
+package MagicSquareSolver;
+
 import java.util.Arrays;
 
 // This is just a test class to check the correctness of certain methods
