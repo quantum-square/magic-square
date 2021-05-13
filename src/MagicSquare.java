@@ -29,15 +29,27 @@ public class MagicSquare {
         this.enableDebug = enableDebug;
         population = new int[populationSize][gridSize*gridSize];
         this.fixed = new boolean[gridSize*gridSize];
+        this.sum = (1 + gridSize * gridSize) * gridSize / 2;
+    }
+
+    public void initializePopulation(){
         for (int i = 0; i < populationSize; i++){
             for (int j = 0; j < gridSize*gridSize; j++) {
                 population[i][j] = j+1;
             }
+            for (int j = 0; j < gridSize*gridSize; j++) {
+                int r = (int)(Math.random()*gridSize*gridSize);
+                int temp = population[i][j];
+                population[i][j] = population[i][r];
+                population[i][r] = temp;
+            }
         }
-        this.sum = (1 + gridSize * gridSize) * gridSize / 2;
     }
 
     public void startGeneticAlgorithm(int generationSize, double pMut){
+        initializePopulation();
+        int t = 0;
+        int lastFitness = 0;
         for (int i = 0; i < generationSize; i++) {
             int[][] newPopulation = new int[populationSize][];
             int[][] selectionPool = getSelectionPool();
@@ -51,7 +63,7 @@ public class MagicSquare {
             }
             population = newPopulation;
 
-            int minfitness = Integer.MAX_VALUE;
+            int minFitness = Integer.MAX_VALUE;
             for (int j = 0; j < populationSize; j++) {
                 int fitness = calculateFitness(population[j]);
                 if(fitness == 0){
@@ -59,13 +71,22 @@ public class MagicSquare {
                     printSquare(population[j]);
                     return;
                 }
-                else if(fitness < minfitness){
-                    minfitness = fitness;
+                else if(fitness < minFitness){
+                    minFitness = fitness;
                 }
             }
+
+            if(lastFitness == minFitness)   t++;
+            else                            t = 0;
+            lastFitness = minFitness;
+            if(t > gridSize*gridSize*500){
+                t = 0;
+                initializePopulation();
+            }
+
             if (enableDebug) {
                 System.out.println("Generation: " + i);
-                System.out.println("Minimum fitness: " + minfitness);
+                System.out.println("Minimum fitness: " + minFitness);
             }
         }
     }
@@ -75,7 +96,7 @@ public class MagicSquare {
         for (int i = 0; i < populationSize; i++)
             pf[i] = new PopulationFitness(population[i], calculateFitness(population[i]));
         Arrays.sort(pf);
-        printSquare(pf[0].population);
+//        printSquare(pf[0].population);
         int[][] selectionPool = new int[populationSize / 2][];
         for (int i = 0; i < populationSize / 2; i++) {
             selectionPool[i] = pf[i].population;
