@@ -4,7 +4,7 @@ public class Main {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
-        MagicSquare magicSquare = new MagicSquare(5, 50, true);
+        MagicSquare magicSquare = new MagicSquare(5, 100, true);
         magicSquare.startGeneticAlgorithm(1000000000, 0.5);
 
         long end = System.currentTimeMillis();

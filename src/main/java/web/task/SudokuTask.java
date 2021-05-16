@@ -13,6 +13,8 @@ import java.util.Random;
  */
 public class SudokuTask extends Task {
 
+    private static final int NOT_FIXED = 0;
+
     private int[][] board;
     private int[][] curBoard;
     private boolean[][] isFixed;
@@ -27,7 +29,7 @@ public class SudokuTask extends Task {
         this.isFixed = new boolean[nSquare][nSquare];
         for (int i = 0; i < nSquare; i++) {
             for (int j = 0; j < nSquare; j++) {
-                if (board[i][j] != 0) {
+                if (board[i][j] != NOT_FIXED) {
                     isFixed[i][j] = true;
                 }
             }
