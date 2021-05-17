@@ -10,7 +10,6 @@
 <!--<button id="demoBtn">Generate demo</button>-->
 
 
-
 connect task id
 
 <label for="taskId"></label><input type="number" id="taskId">
@@ -20,13 +19,17 @@ connect task id
 <label>
     <br><br>
 
-    我不会写js所以不写测试了, 可以用 POSTMAN hhhhh
+    API docs: <a href="http://localhost:8000/docs">Click Me</a>
+
+    <br><br>
+
+    Try Postman~
 
     <br><br>
 
     API DEMO:<br><br>
     POST /sdk/create<br>
-    请求体:<br>
+    Request body:<br>
     {"board":[
     [0,0,0,0,0,0,0,0,0,1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -59,30 +62,32 @@ connect task id
 </label>
 
 POST /start<br>
-请求体(拿上面得到的taskId):<br>
+Request body(taskId obtained above):<br>
 {"taskId":32}
 <br><br>
-suspend, resume, stop 同 start
+suspend, resume, stop are same as start
 
 <br><br>
 
-
+<!--<script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>-->
 <script type="text/javascript">
     document.getElementById("connectBtn").onclick = function () {
         var taskId = document.getElementById("taskId").value;
-        var websocket = new WebSocket("ws://localhost:8000/syncBoard/"+taskId);
-        websocket.onopen = function () {
-            console.log("websocket open");
-            document.getElementById("recv").innerHTML = "Connected";
+        if (taskId !== "") {
+            var websocket = new WebSocket("ws://localhost:8000/syncBoard/" + taskId);
+            websocket.onopen = function () {
+                console.log("websocket open");
+                document.getElementById("recv").innerHTML = "Connected";
+            }
+            websocket.inclose = function () {
+                console.log('websocket close');
+            }
+            websocket.onmessage = function (e) {
+                //console.log(e.data);
+                document.getElementById("recv").innerHTML = e.data;
+            }
+            // websocket.send("\""+txt+"\"");
         }
-        websocket.inclose = function () {
-            console.log('websocket close');
-        }
-        websocket.onmessage = function (e) {
-            //console.log(e.data);
-            document.getElementById("recv").innerHTML = e.data;
-        }
-        // websocket.send("\""+txt+"\"");
     }
 
 

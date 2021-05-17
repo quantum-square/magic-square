@@ -1,6 +1,7 @@
 package web.task;
 
 import io.javalin.websocket.WsContext;
+import web.model.TaskState;
 import web.model.TaskType;
 
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class TaskManager {
         } else {
             return 0;
         }
-
+        task.setTaskState(TaskState.NEW);
         taskGroup.put(task.getId(), task);
 
         return task.getId();
@@ -34,6 +35,7 @@ public class TaskManager {
         Task task = taskGroup.get(id);
         if (task != null && task.getState() == Thread.State.NEW) {
             task.start();
+            task.setTaskState(TaskState.RUNNING);
             return true;
         }
         return false;
@@ -43,6 +45,7 @@ public class TaskManager {
         Task task = taskGroup.get(id);
         if (task != null && task.getState() != Thread.State.TERMINATED) {
             task.suspend();
+            task.setTaskState(TaskState.SUSPEND);
             return true;
         }
         return false;
@@ -50,8 +53,9 @@ public class TaskManager {
 
     public boolean resume(long id) {
         Task task = taskGroup.get(id);
-        if (task != null) {
+        if (task != null && task.getState() != Thread.State.TERMINATED) {
             task.resume();
+            task.setTaskState(TaskState.RUNNING);
             return true;
         }
         return false;
@@ -62,16 +66,25 @@ public class TaskManager {
         if (task != null && task.getState() != Thread.State.TERMINATED) {
 //            task.interrupt();
             task.stop();
+            task.setTaskState(TaskState.TERMINAL);
             return true;
         }
         return false;
+    }
+
+    public TaskState state(Long id) {
+        Task task = taskGroup.get(id);
+        if (task != null) {
+            return task.getTaskState();
+        }
+        return TaskState.EMPTY;
     }
 
     public boolean syncBoard(Long id, WsContext wsContext) {
         Task task = taskGroup.get(id);
         if (task != null) {
             task.setWsContext(wsContext);
-            if (task.isFinished()) {
+            if (task.getTaskState() != TaskState.RUNNING) {
                 task.sendBoardState();
             }
             return true;

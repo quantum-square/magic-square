@@ -3,6 +3,7 @@ package web.task;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.websocket.WsContext;
+import web.model.TaskInfo;
 import web.model.TaskState;
 
 /**
@@ -14,11 +15,19 @@ import web.model.TaskState;
  */
 public abstract class Task extends Thread {
 
-    protected boolean finished = false;
+    protected TaskState taskState = TaskState.EMPTY;
 
     protected ObjectMapper mapper = new ObjectMapper();
 
     protected WsContext wsContext;
+
+    public TaskState getTaskState() {
+        return taskState;
+    }
+
+    public void setTaskState(TaskState taskState) {
+        this.taskState = taskState;
+    }
 
     public void setWsContext(WsContext wsContext) {
         this.wsContext = wsContext;
@@ -28,7 +37,7 @@ public abstract class Task extends Thread {
      * Get board status.
      * @return TaskState
      */
-    public abstract TaskState getBoardState();
+    public abstract TaskInfo getBoardState();
 
     public void sendBoardState(){
         if(wsContext !=null){
@@ -40,7 +49,4 @@ public abstract class Task extends Thread {
         }
     }
 
-    public boolean isFinished() {
-        return finished;
-    }
 }

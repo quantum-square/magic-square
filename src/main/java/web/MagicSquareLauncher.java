@@ -2,13 +2,17 @@ package web;
 
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
-import org.slf4j.Logger;
+import io.javalin.plugin.openapi.InitialConfigurationCreator;
+import io.javalin.plugin.openapi.OpenApiOptions;
+import io.javalin.plugin.openapi.OpenApiPlugin;
+import io.javalin.plugin.openapi.ui.SwaggerOptions;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 
+import io.swagger.v3.oas.models.servers.Server;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.model.BoardParam;
-import web.model.TaskParam;
-import web.task.TaskManager;
-import web.model.TaskType;
+import web.task.TaskController;
 
 import java.util.function.Consumer;
 
@@ -19,90 +23,52 @@ import java.util.function.Consumer;
  */
 public class MagicSquareLauncher {
     private static final Logger logger = LoggerFactory.getLogger(MagicSquareLauncher.class);
+    public final static String HOST = "localhost";
     private final static int PORT = 8000;
-    private final static String TASK_ID_JSON_FORMAT = "{\"taskId\":%d}";
-
 
     public static void main(String[] args) {
+        MagicSquareLauncher launcher = new MagicSquareLauncher();
+        launcher.start();
+    }
 
-        TaskManager taskManager = new TaskManager();
+    private void start() {
 
         Javalin app = Javalin.create(initConfig()).start(PORT);
 
+        TaskController controller = new TaskController();
 
-        app.get("/", ctx -> ctx.render("index.html"));
+        app.get("/", controller.index);
 //        app.get("/", ctx -> ctx.result("Hello world!"));
 
-        app.post("/:taskType/create", ctx -> {
-            TaskType taskType = TaskType.valueOf(ctx.pathParam("taskType"));
-            BoardParam boardParam = ctx.bodyAsClass(BoardParam.class);
-            long taskId = taskManager.create(boardParam.getBoard(), taskType);
-            ctx.result(String.format(TASK_ID_JSON_FORMAT, taskId));
-        });
+        app.post("/:taskType/create", controller.create);
 
-        app.post("/start", ctx -> {
-            TaskParam taskParam = ctx.bodyAsClass(TaskParam.class);
-            boolean result = taskManager.start(taskParam.getTaskId());
-            if (!result) {
-                ctx.status(304);
-            }
-        });
+        app.post("/start", controller.start);
 
-        app.post("/suspend", ctx -> {
-            TaskParam taskParam = ctx.bodyAsClass(TaskParam.class);
-            boolean result = taskManager.suspend(taskParam.getTaskId());
-            if (!result) {
-                ctx.status(304);
-            }
-        });
+        app.post("/suspend", controller.suspend);
 
-        app.post("/resume", ctx -> {
-            TaskParam taskParam = ctx.bodyAsClass(TaskParam.class);
-            boolean result = taskManager.resume(taskParam.getTaskId());
-            if (!result) {
-                ctx.status(304);
-            }
-        });
+        app.post("/resume", controller.resume);
 
-        app.post("/stop", ctx -> {
-            TaskParam taskParam = ctx.bodyAsClass(TaskParam.class);
-            boolean result = taskManager.stop(taskParam.getTaskId());
-            if (!result) {
-                ctx.status(304);
-            }
-        });
+        app.post("/stop", controller.stop);
 
-        app.ws("/syncBoard/:taskId", ws -> {
-            ws.onConnect(ctx -> {
-                Long taskId = ctx.pathParam("taskId", Long.class).getOrNull();
-                boolean result = taskManager.syncBoard(taskId, ctx);
-                if (!result) {
-                    ctx.send("Task not exist!");
-                }
-            });
+        app.get("/state/:taskId", controller.state);
 
-            ws.onMessage(ctx -> {
+        app.ws("/syncBoard/:taskId", controller.acceptWs);
 
-            });
-
-            ws.onBinaryMessage(ctx -> {
-
-            });
-
-            ws.onClose(ctx -> {
-
-            });
-
-            ws.onError(ctx -> {
-
-            });
-
-        });
     }
 
+    private OpenApiOptions getOpenApiOptions() {
+        InitialConfigurationCreator initialConfigurationCreator = () -> new OpenAPI()
+                .info(new Info().version("1.0").description("My Application"))
+                .addServersItem(new Server().url("http://"+HOST+":"+PORT).description("Demo"));
+        return new OpenApiOptions((initialConfigurationCreator)).path("/swagger-docs")
+                .swagger(new SwaggerOptions("/docs").title("APIs Documentation"));
+    }
 
-    private static Consumer<JavalinConfig> initConfig() {
+    private Consumer<JavalinConfig> initConfig() {
         return config -> {
+
+            config.registerPlugin(new OpenApiPlugin(getOpenApiOptions()));
+
             config.requestLogger((ctx, ms) -> {
                 logger.debug("METHOD: [{}], URL: [{}], HOST: {}, STATUS: [{}] USAGE: [{}] ms",
                         ctx.req.getMethod(), ctx.url(), ctx.req.getRemoteHost(), ctx.status(), ms);
