@@ -1,6 +1,6 @@
 package web.task;
 
-import web.model.TaskState;
+import web.model.TaskInfo;
 
 /**
  * @author ruan
@@ -14,7 +14,7 @@ public class MagicSquareTask extends Task{
     }
 
     @Override
-    public TaskState getBoardState() {
+    public TaskInfo getBoardState() {
         return null;
     }
 }

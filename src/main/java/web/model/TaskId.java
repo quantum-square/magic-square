@@ -7,9 +7,17 @@ package web.model;
  * @version 1.0
  * @date 2021/5/16 9:25
  */
-public class TaskParam {
+public class TaskId {
 
     Long taskId;
+
+    public TaskId() {
+
+    }
+
+    public TaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 
     public Long getTaskId() {
         return taskId;

@@ -7,7 +7,7 @@ package web.model;
  * @version 1.0
  * @date 2021/5/16 9:22
  */
-public class BoardParam {
+public class Board {
 
     int[][] board;
 

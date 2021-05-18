@@ -1,5 +1,6 @@
 package web.task;
 
+import web.model.TaskInfo;
 import web.model.TaskState;
 
 import java.util.ArrayList;
@@ -37,14 +38,14 @@ public class SudokuTask extends Task {
     }
 
     @Override
-    public TaskState getBoardState() {
-        return new TaskState(getId(), finished, curBoard);
+    public TaskInfo getBoardState() {
+        return new TaskInfo(getId(), taskState, curBoard);
     }
 
     @Override
     public void run() {
         super.run();
-        while (!finished) {
+        while (taskState != TaskState.FINISHED) {
             initialize();
             simulatedAnnealingSolver();
             printBoard();
@@ -111,7 +112,7 @@ public class SudokuTask extends Task {
 //            System.out.println("FitnessNow: " + fitnessNow);
 //            System.out.println("fitnessNext: " + fitnessNext);
             if (fitnessNext == 0) {
-                finished = true;
+                taskState = TaskState.FINISHED;
                 curBoard = neighbor;
                 return;
             }
