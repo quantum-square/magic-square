@@ -1,5 +1,7 @@
 package MagicSquareSolver;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class HeuristicUtils {
@@ -11,9 +13,26 @@ public class HeuristicUtils {
     private int[] order;
     private int count;
 
+    private int[] sumLine;
+    private int[] sumColumn;
+    private int sumDiagonal;
+    private int sumBackDiagonal;
+
+    private static class Pair{
+        int x;
+        int y;
+
+        public Pair(int x, int y){
+            this.x = x;
+            this.y = y;
+        }
+    }
+
     public HeuristicUtils(int n, int sum){
         this.n = n;
         this.sum = sum;
+        this.sumLine = new int[n];
+        this.sumColumn = new int[n];
         this.count = -1;
 
         this.order = new int[HEURISTIC_NUM];
@@ -28,38 +47,156 @@ public class HeuristicUtils {
         }
     }
 
-    public int[][] getNextBoard(int[][] square, int[] sumLine, int[] sumColumn) {
+    public int[][] getNextBoard(int[][] square) {
         count = count == HEURISTIC_NUM-1 ? 0 : count+1;
-//        return useHeuristic(order[count], square);
-        return useHeuristic(2, square, sumLine, sumColumn);
+        return useHeuristic(order[count], square);
+//        return useHeuristic(4, square);
     }
 
-    private int[][] useHeuristic(int num, int[][] square, int[] sumLine, int[] sumColumn){
+    private void renewSum(int[][] square) {
+        for (int i = 0; i < n; i++) {
+            sumLine[i] = 0;
+            for (int j = 0; j < n; j++)
+                sumLine[i] += square[i][j];
+            sumLine[i] = sumLine[i] - this.sum;
+        }
+
+        for (int i = 0; i < n; i++) {
+            sumColumn[i] = 0;
+            for (int j = 0; j < n; j++)
+                sumColumn[i] += square[j][i];
+            sumColumn[i] += sumColumn[i] - this.sum;
+        }
+
+        sumDiagonal = 0;
+        for (int i = 0; i < n; i++)
+            sumDiagonal += square[i][i];
+        sumDiagonal = sumDiagonal - this.sum;
+
+        sumBackDiagonal = 0;
+        for (int i = 0; i < n; i++)
+            sumBackDiagonal += square[i][n-1-i];
+        sumBackDiagonal = sumBackDiagonal - this.sum;
+    }
+
+    private int[][] useHeuristic(int num, int[][] square){
+        renewSum(square);
         switch (num){
-            case 1: return LLH1(square);
+            case 1: return LLH1(square, false);
             case 2: return LLH2(square);
             case 3: return LLH3(square);
-            case 4: return LLH4(square);
-            case 5: return LLH5(square);
+            case 5:
+            case 8:
+            case 4: return LLH1(square, true);
+            case 7:
             case 6: return LLH6(square);
-            case 7: return LLH7(square);
-            case 8: return LLH8(square);
             case 9: return LLH9(square);
             default: throw new IllegalArgumentException();
         }
     }
 
-    private int[][] LLH1(int[][] square){
+    private int[][] LLH1(int[][] square, boolean mustSatisfy){
+        ArrayList<Pair> badPairs = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (sumLine[i] != 0 || sumColumn[j] != 0){
+                    badPairs.add(new Pair(i, j));
+                }
+                else if ((i == j && sumDiagonal != 0)
+                        || (i == n-j-1 && sumBackDiagonal != 0)){
+                    badPairs.add(new Pair(i, j));
+                }
+            }
+        }
+        if (badPairs.size() <= 1){
+            return square;
+        }
+
         int[][] newBoard = new int[n][];
         for (int i = 0; i < n; i++){
             newBoard[i] = square[i].clone();
         }
 
-//        while(true){
-//            int i = random.nextInt(n);
-//            int j = random.nextInt(n);
-//
-//        }
+        if (mustSatisfy) {
+            int r = random.nextInt(badPairs.size());
+            Pair p = badPairs.get(r);
+            Pair otherPair = new Pair(0, 0);
+            if (sumLine[p.x] != 0) {
+                int expect = newBoard[p.x][p.y] + sum - sumLine[p.x];
+                int minDiff = Integer.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    if (i == p.x)   continue;
+                    for (int j = 0; j < n; j++) {
+                        int diff = Math.abs(newBoard[i][j] - expect);
+                        if (diff < minDiff){
+                            minDiff = diff;
+                            otherPair.x = i;
+                            otherPair.y = j;
+                        }
+                    }
+                }
+            }
+            else if(sumColumn[p.y] != 0) {
+                int expect = newBoard[p.x][p.y] + sum - sumColumn[p.y];
+                int minDiff = Integer.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (i == p.y)   continue;
+                        int diff = Math.abs(newBoard[i][j] - expect);
+                        if (diff < minDiff){
+                            minDiff = diff;
+                            otherPair.x = i;
+                            otherPair.y = j;
+                        }
+                    }
+                }
+            }
+            else if(sumDiagonal != 0) {
+                int expect = newBoard[p.x][p.y] + sum - sumDiagonal;
+                int minDiff = Integer.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (i == j)   continue;
+                        int diff = Math.abs(newBoard[i][j] - expect);
+                        if (diff < minDiff){
+                            minDiff = diff;
+                            otherPair.x = i;
+                            otherPair.y = j;
+                        }
+                    }
+                }
+            }
+            else if(sumBackDiagonal != 0) {
+                int expect = newBoard[p.x][p.y] + sum - sumBackDiagonal;
+                int minDiff = Integer.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (i == n-1-j)   continue;
+                        int diff = Math.abs(newBoard[i][j] - expect);
+                        if (diff < minDiff){
+                            minDiff = diff;
+                            otherPair.x = i;
+                            otherPair.y = j;
+                        }
+                    }
+                }
+            }
+            int temp = newBoard[p.x][p.y];
+            newBoard[p.x][p.y] = newBoard[otherPair.x][otherPair.y];
+            newBoard[otherPair.x][otherPair.y] = temp;
+        }
+        else {
+            int r1 = 0, r2 = 0;
+            while(r1 == r2){
+                r1 = random.nextInt(badPairs.size());
+                r2 = random.nextInt(badPairs.size());
+            }
+            Pair p1 = badPairs.get(r1);
+            Pair p2 = badPairs.get(r2);
+            int temp = newBoard[p1.x][p1.y];
+            newBoard[p1.x][p1.y] = newBoard[p2.x][p2.y];
+            newBoard[p2.x][p2.y] = temp;
+        }
 
         return newBoard;
     }
@@ -102,14 +239,146 @@ public class HeuristicUtils {
             newBoard[i] = square[i].clone();
         }
 
-        return newBoard;
-    }
-
-    private int[][] LLH4(int[][] square){
-        int[][] newBoard = new int[n][];
-        for (int i = 0; i < n; i++){
-            newBoard[i] = square[i].clone();
+        int minIndex = 0;
+        int minSum = Integer.MAX_VALUE;
+        int maxIndex = 0;
+        int maxSum = Integer.MIN_VALUE;
+        int minFlag = 0; // 1 for row, 2 for col, 3 for diagonal, 4 for back
+        int maxFlag = 0; // 1 for row, 2 for col, 3 for diagonal, 4 for back
+        for (int i = 0; i < n; i++) {
+            if (minSum > sumLine[i]){
+                minSum = sumLine[i];
+                minIndex = i;
+                minFlag = 1;
+            }
+            if (maxSum < sumLine[i]){
+                maxSum = sumLine[i];
+                maxIndex = i;
+                maxFlag = 1;
+            }
         }
+
+        for (int i = 0; i < n; i++) {
+            if (minSum > sumLine[i]){
+                minSum = sumLine[i];
+                minIndex = i;
+                minFlag = 2;
+            }
+            if (maxSum < sumLine[i]){
+                maxSum = sumLine[i];
+                maxIndex = i;
+                maxFlag = 2;
+            }
+        }
+
+        if (minSum > sumDiagonal){
+            minSum = sumDiagonal;
+            minFlag = 3;
+        }
+        if (maxSum < sumDiagonal){
+            maxSum = sumDiagonal;
+            maxFlag = 3;
+        }
+
+        if (minSum > sumBackDiagonal){
+            minSum = sumBackDiagonal;
+            minFlag = 4;
+        }
+        if (maxSum < sumBackDiagonal){
+            maxSum = sumBackDiagonal;
+            maxFlag = 4;
+        }
+
+        Pair minPair, maxPair;
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        int minI = 0;
+        int maxI = 0;
+        switch (minFlag){
+            case 1:
+                for (int i = 0; i < n; i++) {
+                    if (min > newBoard[minIndex][i]){
+                        minI = i;
+                        min = newBoard[minIndex][i];
+                    }
+                }
+                minPair = new Pair(minIndex, minI);
+                break;
+            case 2:
+                for (int i = 0; i < n; i++) {
+                    if (min > newBoard[i][minIndex]){
+                        minI = i;
+                        min = newBoard[i][minIndex];
+                    }
+                }
+                minPair = new Pair(minI, minIndex);
+                break;
+            case 3:
+                for (int i = 0; i < n; i++) {
+                    if (min > newBoard[i][i]){
+                        minI = i;
+                        min = newBoard[i][i];
+                    }
+                }
+                minPair = new Pair(minI, minI);
+                break;
+            case 4:
+                for (int i = 0; i < n; i++) {
+                    if (min > newBoard[i][n-1-i]){
+                        minI = i;
+                        min = newBoard[i][n-1-i];
+                    }
+                }
+                minPair = new Pair(minI, n-1-minI);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+
+        switch (maxFlag){
+            case 1:
+                for (int i = 0; i < n; i++) {
+                    if (max < newBoard[maxIndex][i]){
+                        maxI = i;
+                        max = newBoard[maxIndex][i];
+                    }
+                }
+                maxPair = new Pair(maxIndex, maxI);
+                break;
+            case 2:
+                for (int i = 0; i < n; i++) {
+                    if (max < newBoard[i][maxIndex]){
+                        maxI = i;
+                        max = newBoard[i][maxIndex];
+                    }
+                }
+                maxPair = new Pair(maxI, maxIndex);
+                break;
+            case 3:
+                for (int i = 0; i < n; i++) {
+                    if (max < newBoard[i][i]){
+                        maxI = i;
+                        max = newBoard[i][i];
+                    }
+                }
+                maxPair = new Pair(maxI, maxI);
+                break;
+            case 4:
+                for (int i = 0; i < n; i++) {
+                    if (max < newBoard[i][n-1-i]){
+                        maxI = i;
+                        max = newBoard[i][n-1-i];
+                    }
+                }
+                maxPair = new Pair(maxI, n-1-maxI);
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+
+        int temp = newBoard[maxPair.x][maxPair.y];
+        newBoard[maxPair.x][maxPair.y] = newBoard[minPair.x][minPair.y];
+        newBoard[minPair.x][minPair.y] = temp;
 
         return newBoard;
     }
@@ -124,10 +393,42 @@ public class HeuristicUtils {
     }
 
     private int[][] LLH6(int[][] square){
+        ArrayList<Pair> badPairs = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            if (sumLine[i] == 0) {
+                continue;
+            }
+            for (int j = 0; j < n; j++) {
+                if (sumColumn[j] != 0){
+                    if(i == j && sumDiagonal == 0) {
+                        continue;
+                    }
+                    if (i == n-j-1 && sumBackDiagonal == 0){
+                        continue;
+                    }
+                    badPairs.add(new Pair(i, j));
+                }
+            }
+        }
+        if (badPairs.size() <= 1){
+            return square;
+        }
+
         int[][] newBoard = new int[n][];
         for (int i = 0; i < n; i++){
             newBoard[i] = square[i].clone();
         }
+
+        int r1 = 0, r2 = 0;
+        while(r1 == r2){
+            r1 = random.nextInt(badPairs.size());
+            r2 = random.nextInt(badPairs.size());
+        }
+        Pair p1 = badPairs.get(r1);
+        Pair p2 = badPairs.get(r2);
+        int temp = newBoard[p1.x][p1.y];
+        newBoard[p1.x][p1.y] = newBoard[p2.x][p2.y];
+        newBoard[p2.x][p2.y] = temp;
 
         return newBoard;
     }
@@ -154,6 +455,104 @@ public class HeuristicUtils {
         int[][] newBoard = new int[n][];
         for (int i = 0; i < n; i++){
             newBoard[i] = square[i].clone();
+        }
+
+        int minIndex = 0;
+        int minSum = Integer.MAX_VALUE;
+        int maxIndex = 0;
+        int maxSum = Integer.MIN_VALUE;
+        int minFlag = 0; // 1 for row, 2 for col, 3 for diagonal, 4 for back
+        int maxFlag = 0; // 1 for row, 2 for col, 3 for diagonal, 4 for back
+        for (int i = 0; i < n; i++) {
+            if (minSum > sumLine[i]){
+                minSum = sumLine[i];
+                minIndex = i;
+                minFlag = 1;
+            }
+            if (maxSum < sumLine[i]){
+                maxSum = sumLine[i];
+                maxIndex = i;
+                maxFlag = 1;
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            if (minSum > sumLine[i]){
+                minSum = sumLine[i];
+                minIndex = i;
+                minFlag = 2;
+            }
+            if (maxSum < sumLine[i]){
+                maxSum = sumLine[i];
+                maxIndex = i;
+                maxFlag = 2;
+            }
+        }
+
+        if (minSum > sumDiagonal){
+            minSum = sumDiagonal;
+            minFlag = 3;
+        }
+        if (maxSum < sumDiagonal){
+            maxSum = sumDiagonal;
+            maxFlag = 3;
+        }
+
+        if (minSum > sumBackDiagonal){
+            minSum = sumBackDiagonal;
+            minFlag = 4;
+        }
+        if (maxSum < sumBackDiagonal){
+            maxSum = sumBackDiagonal;
+            maxFlag = 4;
+        }
+
+        Pair start1, start2;
+        Pair displace1, displace2;
+        if (minFlag == 1) {
+            start1 = new Pair(minIndex, 0);
+            displace1 = new Pair(0, 1);
+        }
+        else if (minFlag == 2) {
+            start1 = new Pair(0, minIndex);
+            displace1 = new Pair(0, 1);
+        }
+        else if (minFlag == 3) {
+            start1 = new Pair(0, 0);
+            displace1 = new Pair(1, 1);
+        }
+        else {
+            start1 = new Pair(0, n-1);
+            displace1 = new Pair(1, -1);
+        }
+
+        if (maxFlag == 1) {
+            start2 = new Pair(maxIndex, 0);
+            displace2 = new Pair(0, 1);
+        }
+        else if (maxFlag == 2) {
+            start2 = new Pair(0, maxIndex);
+            displace2 = new Pair(0, 1);
+        }
+        else if (maxFlag == 3) {
+            start2 = new Pair(0, 0);
+            displace2 = new Pair(1, 1);
+        }
+        else {
+            start2 = new Pair(0, n-1);
+            displace2 = new Pair(1, -1);
+        }
+
+        for (int i = 0; i < n; i++) {
+            if (random.nextDouble() < 0.5){
+                int temp = newBoard[start1.x][start1.y];
+                newBoard[start1.x][start1.y] = newBoard[start2.x][start2.y];
+                newBoard[start2.x][start2.y] = temp;
+            }
+            start1.x += displace1.x;
+            start1.y += displace1.y;
+            start2.x += displace2.x;
+            start2.y += displace2.y;
         }
 
         return newBoard;
