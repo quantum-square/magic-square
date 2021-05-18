@@ -17,11 +17,21 @@ public class MagicSquareHeuristic {
     private int[] sumColumn;
     private int sumDiagonal;
     private int sumBackDiagonal;
+    private boolean hasFoundSolution;
+
+    private final HeuristicUtils heuristicUtils;
+
+    public MagicSquareHeuristic(int n) {
+        this(n, new int[n][n]);
+    }
 
     public MagicSquareHeuristic(int n, int[][] board) {
         this.n = n;
         this.board = board;
         this.sum = (1 + n * n) * n / 2;
+        heuristicUtils = new HeuristicUtils(n, sum);
+        this.sumLine = new int[n];
+        this.sumColumn = new int[n];
         notFixedNumbers = new ArrayList<>();
         for (int i = 1; i <= n*n; i++) {
             notFixedNumbers.add(i);
@@ -40,9 +50,32 @@ public class MagicSquareHeuristic {
         }
     }
 
-    // Main Approach: Late Acceptance Hill-Climbing
-    public void heuristicSolver(){
+    /**
+     * Main Approach: Late Acceptance Hill-Climbing
+     * @param L the queue to maintain the history of solution function values
+     */
+    public void heuristicSolver(int L){
         initializeCurrentBoard();
+        int f0 = calculateFitness(curBoard);
+        int[] queue = new int[L];
+        for (int i = 0; i < L; i++) {
+            queue[i] = f0;
+        }
+
+        for (int i = 0; !hasFoundSolution; i++) {
+            int[][] newBoard = generateCandidateSolution();
+            int f = calculateFitness(newBoard);
+            if (f == 0) {
+                hasFoundSolution = true;
+            }
+            int c = i % L;
+            if (f <= queue[c]) {
+                curBoard = newBoard;
+            }
+            queue[c] = f;
+            System.out.println("-----");
+            printCurrentBoard();
+        }
     }
 
     private void initializeCurrentBoard() {
@@ -62,40 +95,68 @@ public class MagicSquareHeuristic {
         }
     }
 
-    private int calculateFitness(int[][] square) {
-        int fit = 0;
-
-        //TODO: add renew
-
+    private void renewSum(int[][] square) {
         for (int i = 0; i < n; i++) {
-            int sumLine = 0;
+            sumLine[i] = 0;
             for (int j = 0; j < n; j++)
-                sumLine += square[i][j];
-            fit += Math.abs(sumLine - this.sum);
+                sumLine[i] += square[i][j];
+            sumLine[i] = sumLine[i] - this.sum;
         }
 
         for (int i = 0; i < n; i++) {
-            int sumColumn = 0;
+            sumColumn[i] = 0;
             for (int j = 0; j < n; j++)
-                sumColumn += square[j][i];
-            fit += Math.abs(sumColumn - this.sum);
+                sumColumn[i] += square[j][i];
+            sumColumn[i] += sumColumn[i] - this.sum;
         }
 
-        int sumDiagonal = 0;
+        sumDiagonal = 0;
         for (int i = 0; i < n; i++)
             sumDiagonal += square[i][i];
-        fit += Math.abs(sumDiagonal - this.sum);
+        sumDiagonal = sumDiagonal - this.sum;
 
-        int sumBackDiagonal = 0;
+        sumBackDiagonal = 0;
         for (int i = 0; i < n; i++)
             sumBackDiagonal += square[i][n-1-i];
-        fit += Math.abs(sumBackDiagonal - this.sum);
+        sumBackDiagonal = sumBackDiagonal - this.sum;
+    }
 
+    private int calculateFitness(int[][] square) {
+        renewSum(square);
+        int fit = 0;
+        for (int i = 0; i < n; i++) {
+            fit += Math.abs(sumLine[i]);
+            fit += Math.abs(sumColumn[i]);
+        }
+        fit += Math.abs(sumDiagonal);
+        fit += Math.abs(sumBackDiagonal);
         return fit;
     }
 
-    public static void main(String[] args) {
+    /**
+     * Hyper-heuristic: Random Permutation(RP)
+     *
+     * This generates a permutation of low-level heuristics randomly,
+     * and applies a low-level heuristic in the provided order sequentially
+     * @return new board
+     */
+    private int[][] generateCandidateSolution(){
+        return heuristicUtils.getNextBoard(curBoard, sumLine, sumColumn);
+    }
 
+    private void printCurrentBoard(){
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                System.out.print(curBoard[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        MagicSquareHeuristic msh = new MagicSquareHeuristic(3);
+        msh.heuristicSolver(1000);
+        msh.printCurrentBoard();
     }
 
 }
