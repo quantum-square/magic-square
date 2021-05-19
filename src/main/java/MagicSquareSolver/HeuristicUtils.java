@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class HeuristicUtils {
     private static final Random random = new Random();
-    private static final int HEURISTIC_NUM = 9;
+    private static final int HEURISTIC_NUM = 6;
 
     private int n;
     private int sum;
@@ -85,12 +85,12 @@ public class HeuristicUtils {
             case 1: return LLH1(square, false);
             case 2: return LLH2(square);
             case 3: return LLH3(square);
-            case 5:
-            case 8:
             case 4: return LLH1(square, true);
-            case 7:
             case 6: return LLH6(square);
-            case 9: return LLH9(square);
+            case 5: return LLH9(square);
+//            case 7: return LLH7(square);
+//            case 8: return LLH8(square);
+//            case 9: return LLH9(square);
             default: throw new IllegalArgumentException();
         }
     }

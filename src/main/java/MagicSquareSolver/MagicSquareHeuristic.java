@@ -51,29 +51,52 @@ public class MagicSquareHeuristic {
      * Main Approach: Late Acceptance Hill-Climbing
      */
     public void heuristicSolver(){
-        initializeCurrentBoard();
-        int f0 = calculateFitness(curBoard);
-        int[] queue = new int[L];
-        for (int i = 0; i < L; i++) {
-            queue[i] = f0;
-        }
+        while(!hasFoundSolution) {
+            initializeCurrentBoard();
 
-        for (int i = 0; !hasFoundSolution; i++) {
-            int c = i % L;
-            int[][] newBoard = generateCandidateSolution();
-            int f = calculateFitness(newBoard);
-            if (f == 0) {
-                hasFoundSolution = true;
+            int f0 = calculateFitness(curBoard);
+            int[] queue = new int[L];
+            for (int i = 0; i < L; i++) {
+                queue[i] = f0;
             }
-            if (f <= queue[c]) {
-                curBoard = newBoard;
-                queue[c] = f;
+
+//            int iIdle = 0;
+            for (int i = 0;
+//                 (i < n * 100000 || iIdle <= i * 0.02) &&
+                         !hasFoundSolution; i++) {
+//                int c = i % L;
+                int[][] newBoard = generateCandidateSolution();
+                int fNew = calculateFitness(newBoard);
+                if (fNew == 0) {
+                    hasFoundSolution = true;
+                }
+//                int fOld = calculateFitness(curBoard);
+//                if (fNew >= fOld) {
+//                    iIdle++;
+//                } else {
+//                    iIdle = 0;
+//                }
+//                if (fNew <= queue[c] || fNew <= fOld) {
+//                    curBoard = newBoard;
+//                }
+//                if (Math.min(fNew, fOld) < queue[c])
+//                    queue[c] = Math.min(fNew, fOld);
+                if (fNew <= queue[0]) {
+                    curBoard = newBoard;
+                    queue[0] = fNew;
+                }
+                else if(Math.random() < 0.000007) {
+                    curBoard = newBoard;
+                    queue[0] = fNew;
+                }
+
+                System.out.println("Current fitness:    " + fNew);
+                System.out.println("Best fitness:       " + queue[0]);
+                System.out.println("Current generation: " + i);
+//            printCurrentBoard();
+                System.out.println("--------------------------");
             }
-            System.out.println("Current fitness:    " + f);
-            System.out.println("Best fitness:       " + queue[c]);
-            System.out.println("Current generation: " + i);
             printCurrentBoard();
-            System.out.println("--------------------------");
         }
     }
 
@@ -148,7 +171,7 @@ public class MagicSquareHeuristic {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
-        MagicSquareHeuristic msh = new MagicSquareHeuristic(3, 1);
+        MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
         msh.heuristicSolver();
 
         long end = System.currentTimeMillis();
