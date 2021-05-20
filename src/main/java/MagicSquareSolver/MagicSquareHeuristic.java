@@ -18,16 +18,14 @@ public class MagicSquareHeuristic {
     private boolean hasFoundSolution;
 
     private final HeuristicUtils heuristicUtils;
-    private final int L;
 
-    public MagicSquareHeuristic(int n, int L) {
-        this(n, new int[n][n], L);
+    public MagicSquareHeuristic(int n) {
+        this(n, new int[n][n]);
     }
 
-    public MagicSquareHeuristic(int n, int[][] board, int L) {
+    public MagicSquareHeuristic(int n, int[][] board) {
         this.n = n;
         this.board = board;
-        this.L = L;
         this.sum = (1 + n * n) * n / 2;
         heuristicUtils = new HeuristicUtils(n, sum);
         notFixedNumbers = new ArrayList<>();
@@ -174,28 +172,31 @@ public class MagicSquareHeuristic {
         }
     }
 
+    /**
+     * Run N times and get the average.
+     * @param p this is for SA to adjust the parameter (worsen acceptance rate)
+     * @param x this is also for SA to adjust the parameter
+     */
     public static int test(double x, double p) {
         int sum = 0;
-        final int N = 1;
+        final int N = 30; // run N time
 
         for (int i = 0; i < N; i++) {
             long start = System.currentTimeMillis();
 
-            MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
+            MagicSquareHeuristic msh = new MagicSquareHeuristic(20);
             msh.heuristicSolver();
 
             long end = System.currentTimeMillis();
             sum += end - start;
+
+            System.out.println(end - start + " ms");
         }
 
         System.out.println("Average: " + sum / N + " ms");
-        return sum / N;
+        return sum / N; // return the average
     }
 
-    public static void main(String[] args) {
-        MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
-        msh.heuristicSolver();
-        msh.printCurrentBoard();
-    }
+    public static void main(String[] args) { test(1, 1); }
 
 }
