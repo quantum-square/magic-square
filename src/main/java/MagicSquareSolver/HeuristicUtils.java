@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class HeuristicUtils {
     private static final Random random = new Random();
-    private static final int HEURISTIC_NUM = 6;
+    private static final int HEURISTIC_NUM = 8;
 
     private int n;
     private int sum;
@@ -50,7 +50,6 @@ public class HeuristicUtils {
     public int[][] getNextBoard(int[][] square) {
         count = count == HEURISTIC_NUM-1 ? 0 : count+1;
         return useHeuristic(order[count], square);
-//        return useHeuristic(4, square);
     }
 
     private void renewSum(int[][] square) {
@@ -86,10 +85,10 @@ public class HeuristicUtils {
             case 2: return LLH2(square);
             case 3: return LLH3(square);
             case 4: return LLH1(square, true);
+            case 5: return LLH5(square);
             case 6: return LLH6(square);
-            case 5: return LLH9(square);
-//            case 7: return LLH7(square);
-//            case 8: return LLH8(square);
+            case 7: return LLH7(square);
+            case 8: return LLH9(square);
 //            case 9: return LLH9(square);
             default: throw new IllegalArgumentException();
         }
@@ -389,6 +388,39 @@ public class HeuristicUtils {
             newBoard[i] = square[i].clone();
         }
 
+        int k = 0, l = 0;
+        while (k == l) {
+            k = random.nextInt(n);
+            l = random.nextInt(n);
+        }
+        if (sumLine[k] + sumLine[l] == 0){
+            for (int i = 0; i < n; i++) {
+                if (sumLine[k] == newBoard[k][i] - newBoard[l][i]) {
+                    int temp = newBoard[k][i];
+                    newBoard[k][i] = newBoard[l][i];
+                    newBoard[l][i] = temp;
+                    break;
+                }
+            }
+        }
+
+        k = 0;
+        l = 0;
+        while (k == l) {
+            k = random.nextInt(n);
+            l = random.nextInt(n);
+        }
+        if (sumColumn[k] + sumColumn[l] == 0){
+            for (int i = 0; i < n; i++) {
+                if (sumColumn[k] == newBoard[i][k] - newBoard[i][l]) {
+                    int temp = newBoard[i][k];
+                    newBoard[i][k] = newBoard[i][l];
+                    newBoard[i][l] = temp;
+                    break;
+                }
+            }
+        }
+
         return newBoard;
     }
 
@@ -437,6 +469,53 @@ public class HeuristicUtils {
         int[][] newBoard = new int[n][];
         for (int i = 0; i < n; i++){
             newBoard[i] = square[i].clone();
+        }
+
+        int k = 0, l = 0;
+        while (k == l){
+            k = random.nextInt(n);
+            l = random.nextInt(n);
+        }
+        if (sumLine[k] + sumLine[l] == 0){
+            for (int i = 0; i < n; i++) {
+                for (int j = i+1; j < n; j++) {
+                    if (sumLine[k] == newBoard[k][i] - newBoard[l][i]
+                            + newBoard[k][j] - newBoard[l][j]) {
+                        int temp = newBoard[k][i];
+                        newBoard[k][i] = newBoard[l][i];
+                        newBoard[l][i] = temp;
+
+                        temp = newBoard[k][j];
+                        newBoard[k][j] = newBoard[l][j];
+                        newBoard[l][j] = temp;
+                        break;
+                    }
+                }
+            }
+        }
+
+        k = 0;
+        l = 0;
+        while (k == l){
+            k = random.nextInt(n);
+            l = random.nextInt(n);
+        }
+        if (sumColumn[k] + sumColumn[l] == 0){
+            for (int i = 0; i < n; i++) {
+                for (int j = i+1; j < n; j++) {
+                    if (sumColumn[k] == newBoard[i][k] - newBoard[i][l]
+                            + newBoard[j][k] - newBoard[j][l]) {
+                        int temp = newBoard[i][k];
+                        newBoard[i][k] = newBoard[i][l];
+                        newBoard[i][l] = temp;
+
+                        temp = newBoard[j][k];
+                        newBoard[j][k] = newBoard[j][l];
+                        newBoard[j][l] = temp;
+                        break;
+                    }
+                }
+            }
         }
 
         return newBoard;

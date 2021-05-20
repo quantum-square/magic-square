@@ -2,10 +2,12 @@ package MagicSquareSolver;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 public class MagicSquareHeuristic {
 
     private static final int NOT_FIXED = 0;
+    private static final Random random = new Random();
 
     private int n; // dimension
     private int sum; // magic value
@@ -48,56 +50,41 @@ public class MagicSquareHeuristic {
     }
 
     /**
-     * Main Approach: Late Acceptance Hill-Climbing
+     * Main Approach: Naive move acceptance
      */
     public void heuristicSolver(){
+        initializeCurrentBoard();
+
+        int curFitness = calculateFitness(curBoard);
+
         while(!hasFoundSolution) {
-            initializeCurrentBoard();
-
-            int f0 = calculateFitness(curBoard);
-            int[] queue = new int[L];
-            for (int i = 0; i < L; i++) {
-                queue[i] = f0;
+            int[][] newBoard = curFitness <= n*n ?
+                    generateCandidateSolution() : randomSwap();
+//            int[][] newBoard = generateCandidateSolution();
+//            int[][] newBoard = randomSwap();
+            int fNew = calculateFitness(newBoard);
+            if (fNew == 0) {
+                hasFoundSolution = true;
+            }
+            if (fNew <= curFitness) {
+                curBoard = newBoard;
+                curFitness = fNew;
+            }
+            else if(Math.random() < 0.000038 / n) {
+                curBoard = newBoard;
+                curFitness = fNew;
             }
 
-//            int iIdle = 0;
-            for (int i = 0;
-//                 (i < n * 100000 || iIdle <= i * 0.02) &&
-                         !hasFoundSolution; i++) {
-//                int c = i % L;
-                int[][] newBoard = generateCandidateSolution();
-                int fNew = calculateFitness(newBoard);
-                if (fNew == 0) {
-                    hasFoundSolution = true;
-                }
-//                int fOld = calculateFitness(curBoard);
-//                if (fNew >= fOld) {
-//                    iIdle++;
-//                } else {
-//                    iIdle = 0;
-//                }
-//                if (fNew <= queue[c] || fNew <= fOld) {
-//                    curBoard = newBoard;
-//                }
-//                if (Math.min(fNew, fOld) < queue[c])
-//                    queue[c] = Math.min(fNew, fOld);
-                if (fNew <= queue[0]) {
-                    curBoard = newBoard;
-                    queue[0] = fNew;
-                }
-                else if(Math.random() < 0.000007) {
-                    curBoard = newBoard;
-                    queue[0] = fNew;
-                }
-
-                System.out.println("Current fitness:    " + fNew);
-                System.out.println("Best fitness:       " + queue[0]);
-                System.out.println("Current generation: " + i);
-//            printCurrentBoard();
-                System.out.println("--------------------------");
-            }
-            printCurrentBoard();
+//            if (i % 1000000 == 0) {
+//                System.out.println("Current fitness:    " + fNew);
+//                System.out.println("Best fitness:       " + curFitness);
+//                System.out.println("Current generation: " + i);
+//                  printCurrentBoard();
+//                System.out.println("--------------------------");
+//            }
         }
+        printCurrentBoard();
+        System.out.println("------------------------------------------------");
     }
 
     private void initializeCurrentBoard() {
@@ -159,6 +146,25 @@ public class MagicSquareHeuristic {
         return heuristicUtils.getNextBoard(curBoard);
     }
 
+    private int[][] randomSwap() {
+        int[][] newBoard = new int[n][n];
+        for (int i = 0; i < n; i++){
+//            newBoard[i] = curBoard[i].clone();
+            System.arraycopy(curBoard[i], 0, newBoard[i], 0, n);
+        }
+
+        int row1 = random.nextInt(n);
+        int row2 = random.nextInt(n);
+        int col1 = random.nextInt(n);
+        int col2 = random.nextInt(n);
+
+        int temp = newBoard[row1][col1];
+        newBoard[row1][col1] = newBoard[row2][col2];
+        newBoard[row2][col2] = temp;
+
+        return newBoard;
+    }
+
     private void printCurrentBoard(){
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -169,13 +175,22 @@ public class MagicSquareHeuristic {
     }
 
     public static void main(String[] args) {
-        long start = System.currentTimeMillis();
+        int sum = 0;
+        final int N = 5;
 
-        MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
-        msh.heuristicSolver();
+        for (int i = 0; i < N; i++) {
+            long start = System.currentTimeMillis();
 
-        long end = System.currentTimeMillis();
-        System.out.println((end - start) + " ms");
+            MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
+            msh.heuristicSolver();
+
+            long end = System.currentTimeMillis();
+            sum += end - start;
+
+            System.out.println(end - start + " ms");
+        }
+
+        System.out.println(sum / N + " ms");
     }
 
 }
