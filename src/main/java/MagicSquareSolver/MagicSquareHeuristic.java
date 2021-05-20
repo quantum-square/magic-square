@@ -58,7 +58,7 @@ public class MagicSquareHeuristic {
         int curFitness = calculateFitness(curBoard);
 
         while(!hasFoundSolution) {
-            int[][] newBoard = curFitness <= n*n ?
+            int[][] newBoard = curFitness <= 0.75 * n * n ?
                     generateCandidateSolution() : randomSwap();
 //            int[][] newBoard = generateCandidateSolution();
 //            int[][] newBoard = randomSwap();
@@ -83,8 +83,8 @@ public class MagicSquareHeuristic {
 //                System.out.println("--------------------------");
 //            }
         }
-        printCurrentBoard();
-        System.out.println("------------------------------------------------");
+//        printCurrentBoard();
+//        System.out.println("------------------------------------------------");
     }
 
     private void initializeCurrentBoard() {
@@ -174,9 +174,9 @@ public class MagicSquareHeuristic {
         }
     }
 
-    public static void main(String[] args) {
+    public static int test(double x, double p) {
         int sum = 0;
-        final int N = 5;
+        final int N = 1;
 
         for (int i = 0; i < N; i++) {
             long start = System.currentTimeMillis();
@@ -186,11 +186,16 @@ public class MagicSquareHeuristic {
 
             long end = System.currentTimeMillis();
             sum += end - start;
-
-            System.out.println(end - start + " ms");
         }
 
-        System.out.println(sum / N + " ms");
+        System.out.println("Average: " + sum / N + " ms");
+        return sum / N;
+    }
+
+    public static void main(String[] args) {
+        MagicSquareHeuristic msh = new MagicSquareHeuristic(20, 1);
+        msh.heuristicSolver();
+        msh.printCurrentBoard();
     }
 
 }
