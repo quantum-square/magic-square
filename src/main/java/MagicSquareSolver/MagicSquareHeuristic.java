@@ -17,6 +17,21 @@ public class MagicSquareHeuristic {
     private ArrayList<Integer> notFixedNumbers;
     private boolean hasFoundSolution;
 
+    private int[] sumLine;
+    private int[] sumColumn;
+    private int sumDiagonal;
+    private int sumBackDiagonal;
+    
+    private int[] curSumLine;
+    private int[] curSumColumn;
+    private int curSumDiagonal;
+    private int curSumBackDiagonal;
+
+    public int row1;
+    public int col1;
+    public int row2;
+    public int col2;
+
     private final HeuristicUtils heuristicUtils;
 
     public MagicSquareHeuristic(int n) {
@@ -33,6 +48,11 @@ public class MagicSquareHeuristic {
         for (int i = 1; i <= n*n; i++) {
             notFixedNumbers.add(i);
         }
+
+        this.sumLine = new int[n];
+        this.sumColumn = new int[n];
+        this.curSumLine = new int[n];
+        this.curSumColumn = new int[n];
 
         this.fixed = new boolean[n][n];
         for (int i = 0; i < n; i++) {
@@ -54,23 +74,40 @@ public class MagicSquareHeuristic {
         initializeCurrentBoard();
 
         int curFitness = calculateFitness(curBoard);
+        System.arraycopy(curSumLine, 0, sumLine, 0, n);
+        System.arraycopy(curSumColumn, 0, sumColumn, 0, n);
+        sumDiagonal = curSumDiagonal;
+        sumBackDiagonal = curSumBackDiagonal;
+
+        double coefficient = n * n;
 
         while(!hasFoundSolution) {
-            int[][] newBoard = curFitness <= 0.75 * n * n ?
+            int[][] newBoard = curFitness <= coefficient ?
                     generateCandidateSolution() : randomSwap();
 //            int[][] newBoard = generateCandidateSolution();
 //            int[][] newBoard = randomSwap();
-            int fNew = calculateFitness(newBoard);
+
+            int fNew = curFitness <= coefficient ?
+                    calculateFitness(newBoard) : updateFitness(newBoard, curFitness);
+
             if (fNew == 0) {
                 hasFoundSolution = true;
             }
             if (fNew <= curFitness) {
                 curBoard = newBoard;
                 curFitness = fNew;
+                System.arraycopy(curSumLine, 0, sumLine, 0, n);
+                System.arraycopy(curSumColumn, 0, sumColumn, 0, n);
+                sumDiagonal = curSumDiagonal;
+                sumBackDiagonal = curSumBackDiagonal;
             }
             else if(Math.random() < 0.000038 / n) {
                 curBoard = newBoard;
                 curFitness = fNew;
+                System.arraycopy(curSumLine, 0, sumLine, 0, n);
+                System.arraycopy(curSumColumn, 0, sumColumn, 0, n);
+                sumDiagonal = curSumDiagonal;
+                sumBackDiagonal = curSumBackDiagonal;
             }
 
 //            if (i % 1000000 == 0) {
@@ -101,36 +138,105 @@ public class MagicSquareHeuristic {
         }
     }
 
-    private int calculateFitness(int[][] square) {
+    public int updateFitness(int[][] square, int lastFitness) {
+        System.arraycopy(sumLine, 0, curSumLine, 0, n);
+        System.arraycopy(sumColumn, 0, curSumColumn, 0, n);
+        curSumDiagonal = sumDiagonal;
+        curSumBackDiagonal = sumBackDiagonal;
+        int delta1 = square[row1][col1] - square[row2][col2];
+        int delta2 = -delta1;
+        lastFitness -= Math.abs(curSumLine[row1]) + Math.abs(curSumLine[row2])
+                + Math.abs(curSumColumn[col1]) + Math.abs(curSumColumn[col2]);
+        curSumLine[row1] += delta1;
+        curSumColumn[col1] += delta1;
+        curSumLine[row2] += delta2;
+        curSumColumn[col2] += delta2;
+        lastFitness += Math.abs(curSumLine[row1]) + Math.abs(curSumLine[row2])
+                + Math.abs(curSumColumn[col1]) + Math.abs(curSumColumn[col2]);
+
+        lastFitness -= Math.abs(curSumDiagonal) + Math.abs(curSumBackDiagonal);
+        if (row1 == col1) {
+            curSumDiagonal += delta1;
+        }
+        if (row2 == col2) {
+            curSumDiagonal += delta2;
+        }
+        if (row1 == n - col1 - 1) {
+            curSumBackDiagonal += delta1;
+        }
+        if (row2 == n - col2 - 1) {
+            curSumBackDiagonal += delta2;
+        }
+        lastFitness += Math.abs(curSumDiagonal) + Math.abs(curSumBackDiagonal);
+
+        return lastFitness;
+    }
+
+    public int calculateFitness(int[][] square) {
+        renewSum(square);
         int fit = 0;
 
-        for (int i = 0; i < n; i++) {
-            int sumLine = 0;
-            for (int j = 0; j < n; j++) {
-                sumLine += square[i][j];
-            }
-            fit += Math.abs(sumLine - this.sum);
-        }
+//        for (int i = 0; i < n; i++) {
+//            int sumLine = 0;
+//            for (int j = 0; j < n; j++) {
+//                sumLine += square[i][j];
+//            }
+//            fit += Math.abs(sumLine - this.sum);
+//        }
+//
+//        for (int i = 0; i < n; i++) {
+//            int sumColumn = 0;
+//            for (int j = 0; j < n; j++) {
+//                sumColumn += square[j][i];
+//            }
+//            fit += Math.abs(sumColumn - this.sum);
+//        }
+//
+//        int sumDiagonal = 0;
+//        for (int i = 0; i < n; i++)
+//            sumDiagonal += square[i][i];
+//        fit += Math.abs(sumDiagonal - this.sum);
+//
+//        sumDiagonal = 0;
+//        for (int i = 0; i < n; i++)
+//            sumDiagonal += square[i][n-i-1];
+//        fit += Math.abs(sumDiagonal - this.sum);
 
         for (int i = 0; i < n; i++) {
-            int sumColumn = 0;
-            for (int j = 0; j < n; j++) {
-                sumColumn += square[j][i];
-            }
-            fit += Math.abs(sumColumn - this.sum);
+            fit += Math.abs(curSumLine[i]);
+            fit += Math.abs(curSumColumn[i]);
         }
 
-        int sumDiagonal = 0;
-        for (int i = 0; i < n; i++)
-            sumDiagonal += square[i][i];
-        fit += Math.abs(sumDiagonal - this.sum);
-
-        sumDiagonal = 0;
-        for (int i = 0; i < n; i++)
-            sumDiagonal += square[i][n-i-1];
-        fit += Math.abs(sumDiagonal - this.sum);
+        fit += Math.abs(curSumDiagonal);
+        fit += Math.abs(curSumBackDiagonal);
 
         return fit;
+    }
+
+    private void renewSum(int[][] square) {
+        for (int i = 0; i < n; i++) {
+            curSumLine[i] = 0;
+            for (int j = 0; j < n; j++)
+                curSumLine[i] += square[i][j];
+            curSumLine[i] = curSumLine[i] - this.sum;
+        }
+
+        for (int i = 0; i < n; i++) {
+            curSumColumn[i] = 0;
+            for (int j = 0; j < n; j++)
+                curSumColumn[i] += square[j][i];
+            curSumColumn[i] = curSumColumn[i] - this.sum;
+        }
+
+        curSumDiagonal = 0;
+        for (int i = 0; i < n; i++)
+            curSumDiagonal += square[i][i];
+        curSumDiagonal = curSumDiagonal - this.sum;
+
+        curSumBackDiagonal = 0;
+        for (int i = 0; i < n; i++)
+            curSumBackDiagonal += square[i][n-1-i];
+        curSumBackDiagonal = curSumBackDiagonal - this.sum;
     }
 
     /**
@@ -151,10 +257,10 @@ public class MagicSquareHeuristic {
             System.arraycopy(curBoard[i], 0, newBoard[i], 0, n);
         }
 
-        int row1 = random.nextInt(n);
-        int row2 = random.nextInt(n);
-        int col1 = random.nextInt(n);
-        int col2 = random.nextInt(n);
+        row1 = random.nextInt(n);
+        row2 = random.nextInt(n);
+        col1 = random.nextInt(n);
+        col2 = random.nextInt(n);
 
         int temp = newBoard[row1][col1];
         newBoard[row1][col1] = newBoard[row2][col2];
@@ -190,11 +296,48 @@ public class MagicSquareHeuristic {
             long end = System.currentTimeMillis();
             sum += end - start;
 
+            msh.printCurrentBoard();
+            if(msh.checkValid(msh.curBoard)){
+                System.out.println("Congratulation!");
+            }
+
             System.out.println(end - start + " ms");
         }
 
         System.out.println("Average: " + sum / N + " ms");
         return sum / N; // return the average
+    }
+
+    private boolean checkValid(int[][] square) {
+        for (int i = 0; i < n; i++) {
+            int sum = 0;
+            for (int j = 0; j < n; j++) {
+                sum += square[i][j];
+            }
+            if (sum != this.sum) return false;
+        }
+
+        for (int i = 0; i < n; i++) {
+            int sum = 0;
+            for (int j = 0; j < n; j++) {
+                sum += square[j][i];
+            }
+            if (sum != this.sum) return false;
+        }
+
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            sum += square[i][i];
+        }
+        if (sum != this.sum) return false;
+
+        sum = 0;
+        for (int i = 0; i < n; i++) {
+            sum += square[i][n-1-i];
+        }
+        if (sum != this.sum) return false;
+
+        return true;
     }
 
     public static void main(String[] args) { test(1, 1); }

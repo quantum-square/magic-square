@@ -1,4 +1,5 @@
 import MagicSquareSolver.MagicSquare;
+import MagicSquareSolver.MagicSquareHeuristic;
 import org.junit.*;
 
 import static org.junit.Assert.*;
@@ -17,5 +18,27 @@ public class MagicSquareTest {
         MagicSquare ms4 = new MagicSquare(4, 1);
         arr = new int[]{1, 14, 7, 12, 8, 11, 2, 13, 10, 5, 16, 3, 15, 4, 9, 6};
         assertEquals(0, ms4.calculateFitness(arr));
+    }
+
+    @Test
+    public void test_updateFitness() {
+        MagicSquareHeuristic ms = new MagicSquareHeuristic(3);
+        int[][] newBoard = new int[][]{
+                {4, 9, 2},
+                {3, 5, 7},
+                {8, 1, 6}
+        };
+        int[][] oldBoard = new int[][]{
+                {6, 9, 2},
+                {3, 5, 7},
+                {8, 1, 4}
+        };
+        int lastFitness = ms.calculateFitness(oldBoard);
+        System.out.println(lastFitness);
+        ms.row1 = 0;
+        ms.col1 = 0;
+        ms.row2 = 2;
+        ms.col2 = 2;
+        assertEquals(0, ms.updateFitness(newBoard, lastFitness));
     }
 }

@@ -64,7 +64,7 @@ public class HeuristicUtils {
             sumColumn[i] = 0;
             for (int j = 0; j < n; j++)
                 sumColumn[i] += square[j][i];
-            sumColumn[i] += sumColumn[i] - this.sum;
+            sumColumn[i] = sumColumn[i] - this.sum;
         }
 
         sumDiagonal = 0;
