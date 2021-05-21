@@ -3,7 +3,6 @@ package web.model;
 /**
  * Task parameters, front-end and back-end data transmission objects.
  *
- * @author ruan
  * @version 1.0
  * @date 2021/5/16 9:25
  */

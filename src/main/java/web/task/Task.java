@@ -9,7 +9,6 @@ import web.model.TaskState;
 /**
  * Task base class.
  *
- * @author ruan
  * @version 1.0
  * @date 2021/5/15 17:24
  */
@@ -37,12 +36,12 @@ public abstract class Task extends Thread {
      * Get board status.
      * @return TaskState
      */
-    public abstract TaskInfo getBoardState();
+    public abstract TaskInfo getTaskInfo();
 
     public void sendBoardState(){
         if(wsContext !=null){
             try {
-                wsContext.send(mapper.writeValueAsString(getBoardState()));
+                wsContext.send(mapper.writeValueAsString(getTaskInfo()));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

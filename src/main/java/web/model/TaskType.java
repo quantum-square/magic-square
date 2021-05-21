@@ -3,7 +3,6 @@ package web.model;
 /**
  * Task Type.
  *
- * @author ruan
  * @version 1.0
  * @date 2021/5/15 22:05
  */

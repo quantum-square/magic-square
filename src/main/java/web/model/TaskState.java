@@ -1,7 +1,6 @@
 package web.model;
 
 /**
- * @author ruan
  * @version 1.0
  * @date 2021/5/17 10:27
  */

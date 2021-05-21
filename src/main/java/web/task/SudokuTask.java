@@ -1,5 +1,8 @@
 package web.task;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import web.MagicSquareLauncher;
 import web.model.TaskInfo;
 import web.model.TaskState;
 
@@ -8,12 +11,12 @@ import java.util.Collections;
 import java.util.Random;
 
 /**
- * @author ruan
  * @version 1.0
  * @date 2021/5/15 22:01
  */
 public class SudokuTask extends Task {
 
+    private static final Logger logger = LoggerFactory.getLogger(SudokuTask.class);
     private static final int NOT_FIXED = 0;
 
     private int[][] board;
@@ -38,7 +41,7 @@ public class SudokuTask extends Task {
     }
 
     @Override
-    public TaskInfo getBoardState() {
+    public TaskInfo getTaskInfo() {
         return new TaskInfo(getId(), taskState, curBoard);
     }
 
@@ -48,16 +51,14 @@ public class SudokuTask extends Task {
         while (taskState != TaskState.FINISHED) {
             initialize();
             simulatedAnnealingSolver();
-            printBoard();
+            //printBoard();
         }
     }
 
     public void initialize() {
         curBoard = new int[board.length][board.length];
         for (int i = 0; i < nSquare; i++) {
-            for (int j = 0; j < nSquare; j++) {
-                curBoard[i][j] = board[i][j];
-            }
+            System.arraycopy(board[i], 0, curBoard[i], 0, nSquare);
         }
         for (int i = 0; i < nSquare; i += n) {
             for (int j = 0; j < nSquare; j += n) {
@@ -99,18 +100,14 @@ public class SudokuTask extends Task {
         for (int t = 0; t < Integer.MAX_VALUE; t++) {
             double T = schedule(t);
             if (noNew >= 2000) {
-                System.out.printf("Best Fitness: %2d\n", calculateFitness(curBoard));
-//                return;
+                //logger.trace("Best Fitness: {}\n", calculateFitness(curBoard));
                 t = 0;
                 noNew = 0;
             }
             int[][] neighbor = expand();
             int fitnessNow = calculateFitness(curBoard);
             int fitnessNext = calculateFitness(neighbor);
-//            System.out.println("T: " + T);
-//            System.out.println("Time: " + t);
-//            System.out.println("FitnessNow: " + fitnessNow);
-//            System.out.println("fitnessNext: " + fitnessNext);
+            //logger.trace("T: {}, Time: {}, FitnessNow: {}, FitnessNext: {}", T,t,fitnessNow,fitnessNext);
             if (fitnessNext == 0) {
                 taskState = TaskState.FINISHED;
                 curBoard = neighbor;
@@ -139,9 +136,7 @@ public class SudokuTask extends Task {
         Random random = new Random();
         int[][] neighbor = new int[curBoard.length][curBoard.length];
         for (int i = 0; i < curBoard.length; i++) {
-            for (int j = 0; j < curBoard.length; j++) {
-                neighbor[i][j] = curBoard[i][j];
-            }
+            System.arraycopy(curBoard[i], 0, neighbor[i], 0, curBoard.length);
         }
         boolean isModified1 = false;
         boolean isModified2 = false;

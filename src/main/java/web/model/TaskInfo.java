@@ -3,7 +3,6 @@ package web.model;
 /**
  * Used to synchronize the board status between the front and back ends.
  *
- * @author ruan
  * @version 1.0
  * @date 2021/5/15 20:40
  */
