@@ -1,11 +1,16 @@
 package MagicSquareSolver;
 
+/**
+ * This class is a simulated annealing for the parameters of magic square.
+ * However, it failed to generate the best solution, so this is abandoned.
+ */
 public class Main {
     public static void main(String[] args) {
         double p = 0.000038;
         double x = 15;
         int maxsize = 1000;
-        int lastTime = MagicSquareHeuristic.test(x, p);
+//        int lastTime = MagicSquareHeuristic.test(x, p);
+        int lastTime = MagicSquareHeuristic.test_normal();
         for (int i = 0; i < maxsize; i++) {
             double T = schedule(i);
             if(T == 0)
@@ -16,7 +21,8 @@ public class Main {
                     (Math.random() * 2) : (Math.random() * -2);
             double nextP = p + delta_p;
             double nextX = x + delta_x;
-            int curTime = MagicSquareHeuristic.test(nextX, nextP);
+//            int curTime = MagicSquareHeuristic.test(nextX, nextP);
+            int curTime = MagicSquareHeuristic.test_normal();
             double delta_time = lastTime - curTime;
             if (delta_time > 0 || Math.exp(delta_time / T) > Math.random()){
                 p = nextP;

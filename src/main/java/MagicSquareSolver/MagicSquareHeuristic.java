@@ -8,6 +8,7 @@ public class MagicSquareHeuristic {
 
     private static final int NOT_FIXED = 0;
     private static final Random random = new Random();
+    private static final int INF = Integer.MAX_VALUE;
 
     private int n; // dimension
     private int sum; // magic value
@@ -79,7 +80,7 @@ public class MagicSquareHeuristic {
         sumDiagonal = curSumDiagonal;
         sumBackDiagonal = curSumBackDiagonal;
 
-        double coefficient = n * n;
+        double coefficient = n*n;
 
         while(!hasFoundSolution) {
             int[][] newBoard = curFitness <= coefficient ?
@@ -92,6 +93,9 @@ public class MagicSquareHeuristic {
 
             if (fNew == 0) {
                 hasFoundSolution = true;
+            }
+            if (fNew == INF) {
+                continue;
             }
             if (fNew <= curFitness) {
                 curBoard = newBoard;
@@ -173,6 +177,13 @@ public class MagicSquareHeuristic {
     }
 
     public int calculateFitness(int[][] square) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (fixed[i][j] && square[i][j] != board[i][j]) {
+                    return INF;
+                }
+            }
+        }
         renewSum(square);
         int fit = 0;
 
@@ -257,10 +268,14 @@ public class MagicSquareHeuristic {
             System.arraycopy(curBoard[i], 0, newBoard[i], 0, n);
         }
 
-        row1 = random.nextInt(n);
-        row2 = random.nextInt(n);
-        col1 = random.nextInt(n);
-        col2 = random.nextInt(n);
+        boolean hasChanged = false;
+        while (!hasChanged || fixed[row1][col1] || fixed[row2][col2]) {
+            row1 = random.nextInt(n);
+            row2 = random.nextInt(n);
+            col1 = random.nextInt(n);
+            col2 = random.nextInt(n);
+            hasChanged = true;
+        }
 
         int temp = newBoard[row1][col1];
         newBoard[row1][col1] = newBoard[row2][col2];
@@ -279,11 +294,9 @@ public class MagicSquareHeuristic {
     }
 
     /**
-     * Run N times and get the average.
-     * @param p this is for SA to adjust the parameter (worsen acceptance rate)
-     * @param x this is also for SA to adjust the parameter
+     * Run 30 times with no constraint and get the average.
      */
-    public static int test(double x, double p) {
+    public static int test_normal() {
         int sum = 0;
         final int N = 30; // run N time
 
@@ -291,6 +304,59 @@ public class MagicSquareHeuristic {
             long start = System.currentTimeMillis();
 
             MagicSquareHeuristic msh = new MagicSquareHeuristic(20);
+            msh.heuristicSolver();
+
+            long end = System.currentTimeMillis();
+            sum += end - start;
+
+            msh.printCurrentBoard();
+            if(msh.checkValid(msh.curBoard)){
+                System.out.println("Congratulation!");
+            }
+
+            System.out.println(end - start + " ms");
+        }
+
+        System.out.println("Average: " + sum / N + " ms");
+        return sum / N; // return the average
+    }
+
+    /**
+     * Run 30 times with some places fixed and get the average.
+     */
+    public static int test_constraint() {
+
+        int sum = 0;
+        final int N = 30; // run N time
+
+        for (int i = 0; i < N; i++) {
+
+            int[][] constraintBoard = new int[][] {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+            };
+
+            long start = System.currentTimeMillis();
+
+            MagicSquareHeuristic msh = new MagicSquareHeuristic(20, constraintBoard);
             msh.heuristicSolver();
 
             long end = System.currentTimeMillis();
@@ -340,6 +406,9 @@ public class MagicSquareHeuristic {
         return true;
     }
 
-    public static void main(String[] args) { test(1, 1); }
+    public static void main(String[] args) {
+//        test_normal();
+        test_constraint();
+    }
 
 }
