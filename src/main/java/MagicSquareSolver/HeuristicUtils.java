@@ -47,39 +47,16 @@ public class HeuristicUtils {
         }
     }
 
-    public int[][] getNextBoard(int[][] square) {
+    public int[][] getNextBoard(int[][] square, int[] sumLine, int[] sumColumn, int sumDiagonal, int sumBackDiagonal) {
+        this.sumLine = sumLine.clone();
+        this.sumColumn = sumColumn.clone();
+        this.sumDiagonal = sumDiagonal;
+        this.sumBackDiagonal = sumBackDiagonal;
         count = count == HEURISTIC_NUM-1 ? 0 : count+1;
         return useHeuristic(order[count], square);
     }
 
-    private void renewSum(int[][] square) {
-        for (int i = 0; i < n; i++) {
-            sumLine[i] = 0;
-            for (int j = 0; j < n; j++)
-                sumLine[i] += square[i][j];
-            sumLine[i] = sumLine[i] - this.sum;
-        }
-
-        for (int i = 0; i < n; i++) {
-            sumColumn[i] = 0;
-            for (int j = 0; j < n; j++)
-                sumColumn[i] += square[j][i];
-            sumColumn[i] = sumColumn[i] - this.sum;
-        }
-
-        sumDiagonal = 0;
-        for (int i = 0; i < n; i++)
-            sumDiagonal += square[i][i];
-        sumDiagonal = sumDiagonal - this.sum;
-
-        sumBackDiagonal = 0;
-        for (int i = 0; i < n; i++)
-            sumBackDiagonal += square[i][n-1-i];
-        sumBackDiagonal = sumBackDiagonal - this.sum;
-    }
-
     private int[][] useHeuristic(int num, int[][] square){
-        renewSum(square);
         switch (num){
             case 1: return LLH1(square, false);
             case 2: return LLH2(square);

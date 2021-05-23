@@ -80,7 +80,8 @@ public class MagicSquareHeuristic {
         sumDiagonal = curSumDiagonal;
         sumBackDiagonal = curSumBackDiagonal;
 
-        double coefficient = n*n;
+        double coefficient = 0.75*n*n;
+//        double coefficient = n;
 
         while(!hasFoundSolution) {
             int[][] newBoard = curFitness <= coefficient ?
@@ -258,7 +259,7 @@ public class MagicSquareHeuristic {
      * @return new board
      */
     private int[][] generateCandidateSolution(){
-        return heuristicUtils.getNextBoard(curBoard);
+        return heuristicUtils.getNextBoard(curBoard, sumLine, sumColumn, sumDiagonal, sumBackDiagonal);
     }
 
     private int[][] randomSwap() {
@@ -303,16 +304,16 @@ public class MagicSquareHeuristic {
         for (int i = 0; i < N; i++) {
             long start = System.currentTimeMillis();
 
-            MagicSquareHeuristic msh = new MagicSquareHeuristic(20);
+            MagicSquareHeuristic msh = new MagicSquareHeuristic(10);
             msh.heuristicSolver();
 
             long end = System.currentTimeMillis();
             sum += end - start;
 
-            msh.printCurrentBoard();
-            if(msh.checkValid(msh.curBoard)){
-                System.out.println("Congratulation!");
-            }
+//            msh.printCurrentBoard();
+//            if(msh.checkValid(msh.curBoard)){
+//                System.out.println("Congratulation!");
+//            }
 
             System.out.println(end - start + " ms");
         }
@@ -407,8 +408,8 @@ public class MagicSquareHeuristic {
     }
 
     public static void main(String[] args) {
-//        test_normal();
-        test_constraint();
+        test_normal();
+//        test_constraint();
     }
 
 }

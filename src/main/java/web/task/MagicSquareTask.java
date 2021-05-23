@@ -97,7 +97,7 @@ public class MagicSquareTask extends Task {
         curSumDiagonal = sumDiagonal;
         curSumBackDiagonal = sumBackDiagonal;
 
-        double coefficient = n * n;
+        double coefficient = 0.75 * n * n;
         int count = 0;
 
         while (!hasFoundSolution) {
@@ -227,7 +227,7 @@ public class MagicSquareTask extends Task {
      * @return new board
      */
     private int[][] generateCandidateSolution() {
-        return heuristicUtils.getNextBoard(curBoard);
+        return heuristicUtils.getNextBoard(curBoard, sumRow, sumColumn, sumDiagonal, sumBackDiagonal);
     }
 
     private int[][] randomSwap() {
