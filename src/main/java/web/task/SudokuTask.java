@@ -111,6 +111,7 @@ public class SudokuTask extends Task {
             if (fitnessNext == 0) {
                 taskState = TaskState.FINISHED;
                 curBoard = neighbor;
+                sendBoardState();
                 return;
             }
             int delta = fitnessNow - fitnessNext;
