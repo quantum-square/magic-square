@@ -3,7 +3,7 @@ package web.task;
 import MagicSquareSolver.HeuristicUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.model.TaskInfo;
+import web.model.TaskState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,18 +21,10 @@ public class MagicSquareTask extends Task {
     private static final int INF = Integer.MAX_VALUE;
 
     /**
-     * dimension
-     */
-    private final int n;
-    /**
      * magic value
      */
     private final int sum;
-    private final int[][] board;
-    private int[][] curBoard;
-    private final boolean[][] fixed;
     private final ArrayList<Integer> notFixedNumbers;
-    private boolean hasFoundSolution;
 
     private final int[] curSumRow;
     private final int[] curSumColumn;
@@ -78,19 +70,13 @@ public class MagicSquareTask extends Task {
                 }
             }
         }
-    }
-
-
-    @Override
-    public TaskInfo getTaskInfo() {
-        return new TaskInfo(getId(), taskState, curBoard);
+        initializeCurrentBoard();
     }
 
     @Override
     public void run() {
         super.run();
 
-        initializeCurrentBoard();
         int curFitness = calculateFitness(curBoard);
         System.arraycopy(sumRow, 0, curSumRow, 0, n);
         System.arraycopy(sumColumn, 0, curSumColumn, 0, n);
@@ -100,7 +86,7 @@ public class MagicSquareTask extends Task {
         double coefficient = 0.75 * n * n;
         int count = 0;
 
-        while (!hasFoundSolution) {
+        while (taskState != TaskState.FINISHED) {
             int[][] newBoard;
             int fNew;
 
@@ -113,7 +99,7 @@ public class MagicSquareTask extends Task {
             }
 
             if (fNew == 0) {
-                hasFoundSolution = true;
+                taskState = TaskState.FINISHED;
             } else if (fNew == INF) {
                 continue;
             }
@@ -227,7 +213,7 @@ public class MagicSquareTask extends Task {
      * @return new board
      */
     private int[][] generateCandidateSolution() {
-        return heuristicUtils.getNextBoard(curBoard, sumRow, sumColumn, sumDiagonal, sumBackDiagonal);
+        return heuristicUtils.getNextBoard(curBoard, curSumRow, curSumColumn, curSumDiagonal, curSumBackDiagonal);
     }
 
     private int[][] randomSwap() {
@@ -268,7 +254,9 @@ public class MagicSquareTask extends Task {
             for (int j = 0; j < n; j++) {
                 sum += square[i][j];
             }
-            if (sum != this.sum) return false;
+            if (sum != this.sum) {
+                return false;
+            }
         }
 
         for (int i = 0; i < n; i++) {
@@ -276,21 +264,23 @@ public class MagicSquareTask extends Task {
             for (int j = 0; j < n; j++) {
                 sum += square[j][i];
             }
-            if (sum != this.sum) return false;
+            if (sum != this.sum) {
+                return false;
+            }
         }
 
         int sum = 0;
         for (int i = 0; i < n; i++) {
             sum += square[i][i];
         }
-        if (sum != this.sum) return false;
+        if (sum != this.sum) {
+            return false;
+        }
 
         sum = 0;
         for (int i = 0; i < n; i++) {
             sum += square[i][n-1-i];
         }
-        if (sum != this.sum) return false;
-
-        return true;
+        return sum == this.sum;
     }
 }

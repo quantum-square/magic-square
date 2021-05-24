@@ -14,11 +14,19 @@ import web.model.TaskState;
  */
 public abstract class Task extends Thread {
 
-    protected TaskState taskState = TaskState.EMPTY;
+    /**
+     * dimension
+     */
+    int n;
+    int[][] board;
+    int[][] curBoard;
+    boolean[][] fixed;
 
-    protected ObjectMapper mapper = new ObjectMapper();
+    TaskState taskState = TaskState.EMPTY;
 
-    protected WsContext wsContext;
+    private ObjectMapper mapper = new ObjectMapper();
+
+    private WsContext wsContext;
 
     public TaskState getTaskState() {
         return taskState;
@@ -28,20 +36,18 @@ public abstract class Task extends Thread {
         this.taskState = taskState;
     }
 
+    public int[][] getCurBoard() {
+        return curBoard;
+    }
+
     public void setWsContext(WsContext wsContext) {
         this.wsContext = wsContext;
     }
 
-    /**
-     * Get board status.
-     * @return TaskState
-     */
-    public abstract TaskInfo getTaskInfo();
-
-    public void sendBoardState(){
-        if(wsContext !=null){
+    public void sendBoardState() {
+        if (wsContext != null) {
             try {
-                wsContext.send(mapper.writeValueAsString(getTaskInfo()));
+                wsContext.send(mapper.writeValueAsString(new TaskInfo(getId(), taskState, curBoard)));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

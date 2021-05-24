@@ -2,8 +2,6 @@ package web.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.MagicSquareLauncher;
-import web.model.TaskInfo;
 import web.model.TaskState;
 
 import java.util.ArrayList;
@@ -19,10 +17,7 @@ public class SudokuTask extends Task {
     private static final Logger logger = LoggerFactory.getLogger(SudokuTask.class);
     private static final int NOT_FIXED = 0;
 
-    private int[][] board;
-    private int[][] curBoard;
-    private boolean[][] isFixed;
-    int n, nSquare;
+    int nSquare;
     int sum;
 
     public SudokuTask(int[][] board) {
@@ -30,28 +25,24 @@ public class SudokuTask extends Task {
         this.nSquare = board.length;
         this.n = (int) Math.round(Math.sqrt(nSquare));
         this.sum = (1 + nSquare) * nSquare / 2;
-        this.isFixed = new boolean[nSquare][nSquare];
+        this.fixed = new boolean[nSquare][nSquare];
         for (int i = 0; i < nSquare; i++) {
             for (int j = 0; j < nSquare; j++) {
                 if (board[i][j] != NOT_FIXED) {
-                    isFixed[i][j] = true;
+                    fixed[i][j] = true;
                 }
             }
         }
-    }
-
-    @Override
-    public TaskInfo getTaskInfo() {
-        return new TaskInfo(getId(), taskState, curBoard);
+        initialize();
     }
 
     @Override
     public void run() {
         super.run();
         while (taskState != TaskState.FINISHED) {
-            initialize();
             simulatedAnnealingSolver();
             //printBoard();
+            initialize();
         }
     }
 
@@ -153,7 +144,7 @@ public class SudokuTask extends Task {
                 x1 = random.nextInt(n) + x;
                 y1 = random.nextInt(n) + y;
                 count++;
-                if (!isFixed[x1][y1]) {
+                if (!fixed[x1][y1]) {
                     isModified1 = true;
                     break;
                 }
@@ -164,7 +155,7 @@ public class SudokuTask extends Task {
                 x2 = random.nextInt(n) + x;
                 y2 = random.nextInt(n) + y;
                 count++;
-                if (!isFixed[x2][y2] && !(x2 == x1 && y2 == y1)) {
+                if (!fixed[x2][y2] && !(x2 == x1 && y2 == y1)) {
                     isModified2 = true;
                     break;
                 }
