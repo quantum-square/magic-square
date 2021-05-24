@@ -118,6 +118,7 @@ public class MagicSquareTask extends Task {
                 ++count;
             }
         }
+        sendBoardState();
     }
 
     private void initializeCurrentBoard() {
