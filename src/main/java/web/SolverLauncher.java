@@ -8,25 +8,24 @@ import io.javalin.plugin.openapi.OpenApiPlugin;
 import io.javalin.plugin.openapi.ui.SwaggerOptions;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-
 import io.swagger.v3.oas.models.servers.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.task.TaskController;
+import web.solver.SolverController;
 
 import java.util.function.Consumer;
 
 /**
- * @version 1.0
- * @date 2021/5/15 17:51
+ * @version 2.0
+ * @date 2021/5/23 23:00
  */
-public class MagicSquareLauncher {
-    private static final Logger logger = LoggerFactory.getLogger(MagicSquareLauncher.class);
-    public final static String HOST = "localhost";
+public class SolverLauncher {
+    private static final Logger logger = LoggerFactory.getLogger(SolverLauncher.class);
+    private final static String HOST = "localhost";
     private final static int PORT = 8000;
 
     public static void main(String[] args) {
-        MagicSquareLauncher launcher = new MagicSquareLauncher();
+        SolverLauncher launcher = new SolverLauncher();
         launcher.start();
     }
 
@@ -34,12 +33,12 @@ public class MagicSquareLauncher {
 
         Javalin app = Javalin.create(initConfig()).start(PORT);
 
-        TaskController controller = new TaskController();
+        SolverController controller = new SolverController();
 
         app.get("/", controller.index);
 //        app.get("/", ctx -> ctx.result("Hello world!"));
 
-        app.post("/:taskType/create", controller.create);
+        app.post("/:solverType/create", controller.create);
 
         app.post("/start", controller.start);
 
@@ -49,16 +48,16 @@ public class MagicSquareLauncher {
 
         app.post("/stop", controller.stop);
 
-        app.get("/state/:taskId", controller.state);
+        app.get("/state/:solverId", controller.state);
 
-        app.ws("/syncBoard/:taskId", controller.acceptWs);
+        app.ws("/syncBoard/:solverId", controller.acceptWs);
 
     }
 
     private OpenApiOptions getOpenApiOptions() {
         InitialConfigurationCreator initialConfigurationCreator = () -> new OpenAPI()
                 .info(new Info().version("1.0").description("My Application"))
-                .addServersItem(new Server().url("http://"+HOST+":"+PORT).description("Demo"));
+                .addServersItem(new Server().url("http://" + HOST + ":" + PORT).description("Demo"));
         return new OpenApiOptions((initialConfigurationCreator)).path("/swagger-docs")
                 .swagger(new SwaggerOptions("/docs").title("APIs Documentation"));
     }
@@ -75,8 +74,8 @@ public class MagicSquareLauncher {
 
             config.wsLogger(ws -> {
                 ws.onConnect(ctx -> {
-                    logger.debug("METHOD: [WebSocket], SYNC BOARD [taskId={}], HOST: [{}], STATE: CONNECTED",
-                            ctx.pathParam("taskId"), ctx.header("Host"));
+                    logger.debug("METHOD: [WebSocket], SYNC BOARD [solverId={}], HOST: [{}], STATE: CONNECTED",
+                            ctx.pathParam("solverId"), ctx.header("Host"));
                 });
                 ws.onMessage(ctx -> {
                     logger.debug("METHOD: [WebSocket], RECEIVED MSG: [STRING], HOST: [{}], DATA: {}",
@@ -89,8 +88,8 @@ public class MagicSquareLauncher {
                 });
 
                 ws.onClose(ctx -> {
-                    logger.debug("METHOD: [WebSocket], SYNC BOARD [taskId={}], HOST: [{}], STATE: CLOSED",
-                            ctx.pathParam("taskId"), ctx.header("Host"));
+                    logger.debug("METHOD: [WebSocket], SYNC BOARD [solverId={}], HOST: [{}], STATE: CLOSED",
+                            ctx.pathParam("solverId"), ctx.header("Host"));
                 });
 
                 ws.onError(ctx -> {

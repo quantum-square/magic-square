@@ -1,24 +1,29 @@
-package web.task;
+package core.solver;
 
-import MagicSquareSolver.HeuristicUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import web.model.SolverInfoDTO;
+import core.model.SolverState;
+import io.javalin.websocket.WsContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.model.TaskState;
+import web.model.WebSender;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
 /**
- * @version 1.0
- * @date 2021/5/15 22:01
+ * @version 2.0
+ * @date 2021/5/23 22:55
  */
-public class MagicSquareTask extends Task {
-
-    private static final Logger logger = LoggerFactory.getLogger(MagicSquareTask.class);
+public class MagicSquareSolver extends MatrixSolver  implements WebSender {
+    private static final Logger logger = LoggerFactory.getLogger(MagicSquareSolver.class);
     private static final int NOT_FIXED = 0;
     private static final Random RANDOM = new Random();
     private static final int INF = Integer.MAX_VALUE;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private WsContext sender;
 
     /**
      * magic value
@@ -43,13 +48,14 @@ public class MagicSquareTask extends Task {
 
     private final HeuristicUtils heuristicUtils;
 
-    public MagicSquareTask(int[][] board) {
+    public MagicSquareSolver(int[][] board) {
+        super();
         this.n = board.length;
         this.board = board;
         this.sum = (1 + n * n) * n / 2;
-        heuristicUtils = new HeuristicUtils(n, sum);
-        notFixedNumbers = new ArrayList<>();
-        curBoard = new int[n][n];
+        this.heuristicUtils = new HeuristicUtils(n, sum);
+        this.notFixedNumbers = new ArrayList<>();
+        this.curBoard = new int[n][n];
         for (int i = 1; i <= n * n; i++) {
             notFixedNumbers.add(i);
         }
@@ -70,13 +76,33 @@ public class MagicSquareTask extends Task {
                 }
             }
         }
-        initializeCurrentBoard();
+        this.curBoard = board;
+        this.solverId = getId();
+    }
+
+    @Override
+    public void setSender(Object sender) {
+        if (sender instanceof WsContext) {
+            this.sender = (WsContext) sender;
+        }
+    }
+
+    @Override
+    public void sendData() {
+        if(sender !=null){
+            try {
+                sender.send(mapper.writeValueAsString(new SolverInfoDTO(solverId, solverState, curBoard)));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public void run() {
         super.run();
 
+        initializeCurrentBoard();
         int curFitness = calculateFitness(curBoard);
         System.arraycopy(sumRow, 0, curSumRow, 0, n);
         System.arraycopy(sumColumn, 0, curSumColumn, 0, n);
@@ -86,7 +112,7 @@ public class MagicSquareTask extends Task {
         double coefficient = 0.75 * n * n;
         int count = 0;
 
-        while (taskState != TaskState.FINISHED) {
+        while (solverState != SolverState.FINISHED) {
             int[][] newBoard;
             int fNew;
 
@@ -99,7 +125,7 @@ public class MagicSquareTask extends Task {
             }
 
             if (fNew == 0) {
-                taskState = TaskState.FINISHED;
+                solverState = SolverState.FINISHED;
             } else if (fNew == INF) {
                 continue;
             }
@@ -114,11 +140,12 @@ public class MagicSquareTask extends Task {
             }
 
             if (count % 100 == 0) {
-                sendBoardState();
+                sendData();
                 ++count;
             }
         }
-        sendBoardState();
+
+        sendData();
     }
 
     private void initializeCurrentBoard() {
@@ -137,7 +164,7 @@ public class MagicSquareTask extends Task {
         }
     }
 
-    public int updateFitness(int[][] square, int lastFitness) {
+    private int updateFitness(int[][] square, int lastFitness) {
         System.arraycopy(curSumRow, 0, sumRow, 0, n);
         System.arraycopy(curSumColumn, 0, sumColumn, 0, n);
         sumDiagonal = curSumDiagonal;
@@ -171,7 +198,7 @@ public class MagicSquareTask extends Task {
         return lastFitness;
     }
 
-    public int calculateFitness(int[][] square) {
+    private int calculateFitness(int[][] square) {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (fixed[i][j] && square[i][j] != board[i][j]) {
@@ -239,49 +266,4 @@ public class MagicSquareTask extends Task {
         return newBoard;
     }
 
-    public void printCurrentBoard() {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                System.out.printf("%3d ", curBoard[i][j]);
-            }
-            System.out.println();
-        }
-    }
-
-    public boolean checkValid() {
-        int[][] square = curBoard;
-        for (int i = 0; i < n; i++) {
-            int sum = 0;
-            for (int j = 0; j < n; j++) {
-                sum += square[i][j];
-            }
-            if (sum != this.sum) {
-                return false;
-            }
-        }
-
-        for (int i = 0; i < n; i++) {
-            int sum = 0;
-            for (int j = 0; j < n; j++) {
-                sum += square[j][i];
-            }
-            if (sum != this.sum) {
-                return false;
-            }
-        }
-
-        int sum = 0;
-        for (int i = 0; i < n; i++) {
-            sum += square[i][i];
-        }
-        if (sum != this.sum) {
-            return false;
-        }
-
-        sum = 0;
-        for (int i = 0; i < n; i++) {
-            sum += square[i][n-1-i];
-        }
-        return sum == this.sum;
-    }
 }

@@ -1,10 +1,10 @@
-import web.task.MagicSquareTask;
+import core.solver.MagicSquareSolver;
 
 /**
  * @version 1.0
  * @date 2021/5/24 8:40
  */
-public class MagicSquareTaskTest {
+public class MagicSquareSolverTest {
 
     public static void main(String[] args) {
         testNormal();
@@ -21,7 +21,7 @@ public class MagicSquareTaskTest {
         for (int i = 0; i < N; i++) {
             long start = System.currentTimeMillis();
 
-            MagicSquareTask mss = new MagicSquareTask(new int[10][10]);
+            MagicSquareSolver mss = new MagicSquareSolver(new int[10][10]);
             mss.run();
 
             long end = System.currentTimeMillis();
@@ -74,7 +74,7 @@ public class MagicSquareTaskTest {
 
             long start = System.currentTimeMillis();
 
-            MagicSquareTask mss = new MagicSquareTask(constraintBoard);
+            MagicSquareSolver mss = new MagicSquareSolver(constraintBoard);
             mss.run();
 
 

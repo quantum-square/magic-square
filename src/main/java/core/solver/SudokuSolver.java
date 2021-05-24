@@ -1,30 +1,36 @@
-package web.task;
+package core.solver;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import web.model.SolverInfoDTO;
+import core.model.SolverState;
+import io.javalin.websocket.WsContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import web.model.TaskState;
+import web.model.WebSender;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
 /**
- * @version 1.0
- * @date 2021/5/15 22:01
+ * @version 2.0
+ * @date 2021/5/23 22:55
  */
-public class SudokuTask extends Task {
-
-    private static final Logger logger = LoggerFactory.getLogger(SudokuTask.class);
+public class SudokuSolver extends MatrixSolver  implements WebSender {
+    private static final Logger logger = LoggerFactory.getLogger(SudokuSolver.class);
     private static final int NOT_FIXED = 0;
+    private final Random random = new Random();
+    private final ObjectMapper mapper = new ObjectMapper();
+    private WsContext sender;
 
-    int nSquare;
-    int sum;
+    private final int nSquare;
 
-    public SudokuTask(int[][] board) {
+    public SudokuSolver(int[][] board) {
+        super();
         this.board = board;
         this.nSquare = board.length;
         this.n = (int) Math.round(Math.sqrt(nSquare));
-        this.sum = (1 + nSquare) * nSquare / 2;
         this.fixed = new boolean[nSquare][nSquare];
         for (int i = 0; i < nSquare; i++) {
             for (int j = 0; j < nSquare; j++) {
@@ -33,20 +39,40 @@ public class SudokuTask extends Task {
                 }
             }
         }
-        initialize();
+        this.curBoard = board;
+        this.solverId = getId();
     }
 
     @Override
     public void run() {
         super.run();
-        while (taskState != TaskState.FINISHED) {
+        while (solverState != SolverState.FINISHED) {
+            initialize();
             simulatedAnnealingSolver();
             //printBoard();
-            initialize();
+        }
+        sendData();
+    }
+
+    @Override
+    public void setSender(Object sender) {
+        if (sender instanceof WsContext) {
+            this.sender = (WsContext) sender;
         }
     }
 
-    public void initialize() {
+    @Override
+    public void sendData() {
+        if(sender !=null){
+            try {
+                sender.send(mapper.writeValueAsString(new SolverInfoDTO(solverId, solverState, curBoard)));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void initialize() {
         curBoard = new int[board.length][board.length];
         for (int i = 0; i < nSquare; i++) {
             System.arraycopy(board[i], 0, curBoard[i], 0, nSquare);
@@ -84,10 +110,10 @@ public class SudokuTask extends Task {
         }
     }
 
-    // t -> time
-    // T -> Temperature
-    public void simulatedAnnealingSolver() {
+    private void simulatedAnnealingSolver() {
         int noNew = 0;
+        // t -> time
+        // T -> Temperature
         for (int t = 0; t < Integer.MAX_VALUE; t++) {
             double T = schedule(t);
             if (noNew >= 2000) {
@@ -100,10 +126,9 @@ public class SudokuTask extends Task {
             int fitnessNext = calculateFitness(neighbor);
             //logger.trace("T: {}, Time: {}, FitnessNow: {}, FitnessNext: {}", T,t,fitnessNow,fitnessNext);
             if (fitnessNext == 0) {
-                taskState = TaskState.FINISHED;
+                solverState = SolverState.FINISHED;
                 curBoard = neighbor;
-                sendBoardState();
-                return;
+                break;
             }
             int delta = fitnessNow - fitnessNext;
             if (delta > 0 || probability(Math.exp(delta / T))) {
@@ -114,7 +139,7 @@ public class SudokuTask extends Task {
             }
 
             if (t % 100 == 0) {
-                sendBoardState();
+                sendData();
             }
         }
     }
@@ -125,7 +150,6 @@ public class SudokuTask extends Task {
     }
 
     private int[][] expand() {
-        Random random = new Random();
         int[][] neighbor = new int[curBoard.length][curBoard.length];
         for (int i = 0; i < curBoard.length; i++) {
             System.arraycopy(curBoard[i], 0, neighbor[i], 0, curBoard.length);
@@ -171,7 +195,7 @@ public class SudokuTask extends Task {
         return p > Math.random();
     }
 
-    public int calculateFitness(int[][] board) {
+    private int calculateFitness(int[][] board) {
         int fit = 0;
         int length = board.length;
 
@@ -200,13 +224,4 @@ public class SudokuTask extends Task {
         return fit;
     }
 
-
-    public void printBoard() {
-        for (int i = 0; i < nSquare; i++) {
-            for (int j = 0; j < nSquare; j++) {
-                System.out.printf("%2d ", curBoard[i][j]);
-            }
-            System.out.println();
-        }
-    }
 }

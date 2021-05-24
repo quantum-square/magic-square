@@ -71,7 +71,7 @@
                     <archive>
                         <manifest>
                             <!--这里要替换成jar包main方法所在类 -->
-                            <mainClass>web.MagicSquareLauncher</mainClass>
+                            <mainClass>web.SolverLauncher</mainClass>
                         </manifest>
                         <manifestEntries>
                             <!--上面指定类的路径-->
