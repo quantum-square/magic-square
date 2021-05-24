@@ -37,7 +37,7 @@ Selection hyper-heuristic means "the heuristic to choose heuristic". [1] tested 
   
 - **Objective function**: the sum of the differences between magic value and the sum of each row, column or diagonal. If the fixed places are modified, the value of objective function's value is **infinity** and will never be accepted.
 
-### 1.3 Our Improvement
+### 1.3 Improvements
 
 Based on the work above, we found the convergence speed is too slow. This is because complicate search is needed when doing heuristics. To make it converge faster, two things are done:
 
@@ -51,27 +51,29 @@ The following figure shows the flow of our algorithm:
 
 <img src="./image/algorithm.png" alt="img" style="zoom:50%;" />
 
-### 1.4 Performance
+### 1.4 Future Work
 
-We performed our experiments on an `intel i7-10870H CPU @ 2.20 GHz with 16.00 GB memory` and each one is repeated for 30 trials. The result is shown in the table below:
+Although the result seems quite excellent, there are still improvements to do:
 
-|  n  | average time |
-| --- | ------------ |
-|  3  |   73 ms |
-|  5  |  788 ms |
-|  10 |   47 ms |
-|  15 |   98 ms |
-|  20 |  238 ms |
-|  30 | 1324 ms |
-|  40 | 3794 ms |
+- calculate fitness faster for heuristic part
 
-
+- implement another set of hyper-heuristic to solve large matrix quickly
 
 ## 2 Sudoku solver
 
+### 2.1 Solver Design
 
+The requirement of solving sudoku is just 9*9, so for this puzzle, **Simulated Annealing** is used to solve this problem, and it achieved great performance. 
 
+- Initialize the board with randomly filling 1 to 9 into the 9 small squares
 
+- During the algorithm, random swap two entries in a 3*3 square to get new solution
+
+- If we get no solution for 1000 generations, a **reheat** will be used, that is, to higher the temperature to accept worsening solutions again
+
+### 2.2 Future Work
+
+Maybe we can try heuristics for sudoku as what we have done to magic square.
 
 ## Reference
 
