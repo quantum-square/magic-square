@@ -40,6 +40,8 @@ public class SolverLauncher {
 
         app.post("/:solverType/create", controller.create);
 
+        app.post("/:solverType/chgSendFreq", controller.chgSendFreq);
+
         app.post("/start", controller.start);
 
         app.post("/suspend", controller.suspend);

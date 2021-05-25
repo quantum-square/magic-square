@@ -19,6 +19,7 @@ import java.util.Random;
  */
 public class SudokuSolver extends MatrixSolver  implements WebSender {
     private static final Logger logger = LoggerFactory.getLogger(SudokuSolver.class);
+    private static int sendFreq = 1000;
     private static final int NOT_FIXED = 0;
     private final Random random = new Random();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -70,6 +71,15 @@ public class SudokuSolver extends MatrixSolver  implements WebSender {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static int getSendFreq() {
+        return sendFreq;
+    }
+
+    public static void setSendFreq(int sendFreq) {
+        logger.info("Change Sudoku Solver send freq from {} to {}.", SudokuSolver.sendFreq, sendFreq);
+        SudokuSolver.sendFreq = sendFreq;
     }
 
     private void initialize() {
@@ -138,7 +148,7 @@ public class SudokuSolver extends MatrixSolver  implements WebSender {
                 noNew++;
             }
 
-            if (t % 100 == 0) {
+            if (t % sendFreq == 0) {
                 sendData();
             }
         }

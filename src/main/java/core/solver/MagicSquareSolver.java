@@ -19,6 +19,7 @@ import java.util.Random;
  */
 public class MagicSquareSolver extends MatrixSolver  implements WebSender {
     private static final Logger logger = LoggerFactory.getLogger(MagicSquareSolver.class);
+    private static int sendFreq = 10000;
     private static final int NOT_FIXED = 0;
     private static final Random RANDOM = new Random();
     private static final int INF = Integer.MAX_VALUE;
@@ -83,6 +84,7 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
     @Override
     public void setSender(Object sender) {
         if (sender instanceof WsContext) {
+            logger.info("Solver {} set sender {}", solverId, sender);
             this.sender = (WsContext) sender;
         }
     }
@@ -96,6 +98,15 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static int getSendFreq() {
+        return sendFreq;
+    }
+
+    public static void setSendFreq(int sendFreq) {
+        logger.info("Change Magic Square Solver send freq from {} to {}.", MagicSquareSolver.sendFreq, sendFreq);
+        MagicSquareSolver.sendFreq = sendFreq;
     }
 
     @Override
@@ -113,6 +124,7 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
         int count = 0;
 
         while (solverState != SolverState.FINISHED) {
+            ++count;
             int[][] newBoard;
             int fNew;
 
@@ -139,9 +151,8 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
                 curSumBackDiagonal = sumBackDiagonal;
             }
 
-            if (count % 100 == 0) {
+            if (count % sendFreq == 0) {
                 sendData();
-                ++count;
             }
         }
 

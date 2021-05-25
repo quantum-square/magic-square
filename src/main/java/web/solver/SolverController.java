@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import core.model.SolverState;
 import web.model.BoardDTO;
+import web.model.SendFreqDTO;
 import web.model.SolverIdDTO;
 import core.model.SolverType;
 
@@ -52,12 +53,33 @@ public class SolverController {
     };
 
     @OpenApi(
+            path = "/:solverType/chgSendFreq",
+            method = HttpMethod.POST,
+            pathParams = @OpenApiParam(name = "solverType", type = SolverType.class),
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = SendFreqDTO.class),
+                    description = "Websocket information sending frequency, once every [sendFreq]."),
+            responses = {
+                    @OpenApiResponse(status = "200", content = @OpenApiContent(from = SolverIdDTO.class),
+                            description = "Solver send freq set successfully"),
+                    @OpenApiResponse(status = "304", description = "The solver does not exist or illegal [sendFreq].")
+            }
+    )
+    public final Handler chgSendFreq = ctx -> {
+        SolverType solverType = SolverType.valueOf(ctx.pathParam("solverType"));
+        SendFreqDTO sendFreq = ctx.bodyAsClass(SendFreqDTO.class);
+        boolean result = solverManager.chgSendFreq(sendFreq.getSendFreq(), solverType);
+        if (!result) {
+            ctx.status(304);
+        }
+    };
+
+    @OpenApi(
             path = "/start",
             method = HttpMethod.POST,
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = SolverIdDTO.class)),
             responses = {
                     @OpenApiResponse(status = "200", description = "Solver started successfully."),
-                    @OpenApiResponse(status = "304", description = "The core.solver does not exist or has started.")
+                    @OpenApiResponse(status = "304", description = "The solver does not exist or has started.")
             }
     )
     public final Handler start = ctx -> {

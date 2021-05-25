@@ -35,6 +35,23 @@ public class SolverManager {
         return solver.getId();
     }
 
+    public boolean chgSendFreq(int freq, SolverType type) {
+        if (freq <= 0 ){
+            return false;
+        }
+        switch (type){
+            case sdk:
+                SudokuSolver.setSendFreq(freq);
+                break;
+            case ms:
+                MagicSquareSolver.setSendFreq(freq);
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
     public boolean start(long id) {
         MatrixSolver solver = solverGroup.get(id);
         if (solver != null && solver.getSolverState() == SolverState.NEW) {
