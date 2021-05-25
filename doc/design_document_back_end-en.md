@@ -64,18 +64,19 @@ The simple UML diagram of the core module (contains only public fields and metho
 + `SudokuSolver` : subclass of `MatrixSolver`, which perform the tasks of solving Sudoku.
 + `MagicSquareSolver` : subclass of `MatrixSolver`, which perform the tasks of solving Magic Squares.
 + `HeuristicUtils` : a tool class of heuristic algorithms for solving matrix puzzles.
++ `SolverType` : solver type enumeration class, currently includes Sudoku and Magic Square.
 + `SolverState` : an enumeration class that contains the state of the solver.
-  - EMPTY: The solver did not solve the task
-  - NEW: The solver has been assigned a solution task, but the solving task has not yet started
-  - RUNNING: The solver is solving the matrix puzzle
-  - SUSPEND: The solving task is suspended
-  - FINISHED: The solver has completed the solving task
-  - TERMINATED: The solving task of the solver has been actively terminated (the solution may not be completed)
+  - *EMPTY* : The solver did not solve the task
+  - *NEW* : The solver has been assigned a solution task, but the solving task has not yet started
+  - *RUNNING* : The solver is solving the matrix puzzle
+  - *SUSPEND* : The solving task is suspended
+  - *FINISHED* : The solver has completed the solving task
+  - *TERMINATED* : The solving task of the solver has been actively terminated (the solution may not be completed)
 
 
 ## 2. Web Module
 
-The main task of the Web module is to transmit data with the front-end page, accept matrix puzzle solving tasks, and synchronize matrix information and solver status.
+The main task of the Web module is to transfer data with the front-end page, accept matrix puzzle solving tasks, and synchronize matrix information and solver status.
 
 The simple UML diagram of the Web module (contains only public fields and methods) is as follows:
 
@@ -88,4 +89,7 @@ The simple UML diagram of the Web module (contains only public fields and method
   - When a new problem solver is created, a globally unique problem solver ID is generated
   - The solver ID can be used to start, pause, stop the solver, and synchronize matrix data
 + `SolverController` : contains some handlers for handling requests from the front-end, parsing parameters, and synchronizing results.
-
++ `SolverLauncher` : solver back-end starter, back-end program start entry.
++ `BoardDTO` : data transfer object, used to transfer matrix chessboard data between the front-end and back-end
++ `SolverIdDTO` : data transfer object, used to transfer solver ID between the front-end and back-end
++ `SolverInfoDTO` : data transfer object, used to transfer the solver information (including solver ID, solver state, matrix chessboard data) between the front-end and back-end.
