@@ -83,7 +83,7 @@ Web 模块的主要任务是和前端页面进行数据传输，接受矩阵难�
 
 Web 模块简单的 UML 图（只包含 public 字段和方法）如下：
 
-![UML-simple](image/UML-simple.png)
+![UML-simple](image/UML-Web.png)
 
 <br>
 

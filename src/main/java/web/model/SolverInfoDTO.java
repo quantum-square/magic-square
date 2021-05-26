@@ -10,11 +10,13 @@ public class SolverInfoDTO {
 
     Long solverId;
     SolverState solverState;
+    Long timeCost;
     int[][] board;
 
-    public SolverInfoDTO(Long solverId, SolverState solverState, int[][] board) {
+    public SolverInfoDTO(Long solverId, SolverState solverState, Long timeCost, int[][] board) {
         this.solverId = solverId;
         this.solverState = solverState;
+        this.timeCost = timeCost;
         this.board = board;
     }
 
@@ -32,6 +34,14 @@ public class SolverInfoDTO {
 
     public void setSolverState(SolverState solverState) {
         this.solverState = solverState;
+    }
+
+    public Long getTimeCost() {
+        return timeCost;
+    }
+
+    public void setTimeCost(Long timeCost) {
+        this.timeCost = timeCost;
     }
 
     public int[][] getBoard() {

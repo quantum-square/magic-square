@@ -36,10 +36,10 @@ public class SolverManager {
     }
 
     public boolean chgSendFreq(int freq, SolverType type) {
-        if (freq <= 0 ){
+        if (freq <= 0) {
             return false;
         }
-        switch (type){
+        switch (type) {
             case sdk:
                 SudokuSolver.setSendFreq(freq);
                 break;
@@ -67,6 +67,7 @@ public class SolverManager {
         if (solver != null && solver.getSolverState() != SolverState.TERMINATED) {
             solver.suspend();
             solver.setSolverState(SolverState.SUSPEND);
+            solver.setPauseTimestamp(System.currentTimeMillis());
             return true;
         }
         return false;
@@ -75,6 +76,9 @@ public class SolverManager {
     public boolean resume(long id) {
         MatrixSolver solver = solverGroup.get(id);
         if (solver != null && solver.getSolverState() != SolverState.TERMINATED) {
+            if (solver.getSolverState() != SolverState.NEW) {
+                solver.addPauseTimes(System.currentTimeMillis() - solver.getPauseTimestamp());
+            }
             solver.resume();
             solver.setSolverState(SolverState.RUNNING);
             return true;

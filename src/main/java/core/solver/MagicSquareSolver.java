@@ -17,7 +17,7 @@ import java.util.Random;
  * @version 2.0
  * @date 2021/5/23 22:55
  */
-public class MagicSquareSolver extends MatrixSolver  implements WebSender {
+public class MagicSquareSolver extends MatrixSolver implements WebSender {
     private static final Logger logger = LoggerFactory.getLogger(MagicSquareSolver.class);
     private static int sendFreq = 10000;
     private static final int NOT_FIXED = 0;
@@ -91,9 +91,21 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
 
     @Override
     public void sendData() {
-        if(sender !=null){
+        if (sender != null) {
             try {
-                sender.send(mapper.writeValueAsString(new SolverInfoDTO(solverId, solverState, curBoard)));
+                long timeCost;
+                switch (solverState) {
+                    case NEW:
+                        timeCost = 0;
+                        break;
+                    case FINISHED:
+                        timeCost = endTimestamp - startTimestamp - pauseTimes;
+                        break;
+                    default:
+                        timeCost = System.currentTimeMillis() - startTimestamp - pauseTimes;
+                        break;
+                }
+                sender.send(mapper.writeValueAsString(new SolverInfoDTO(solverId, solverState, timeCost, curBoard)));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -122,7 +134,7 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
 
         double coefficient = 0.75 * n * n;
         int count = 0;
-
+        startTimestamp = System.currentTimeMillis();
         while (solverState != SolverState.FINISHED) {
             ++count;
             int[][] newBoard;
@@ -155,6 +167,7 @@ public class MagicSquareSolver extends MatrixSolver  implements WebSender {
                 sendData();
             }
         }
+        endTimestamp = System.currentTimeMillis();
 
         sendData();
     }

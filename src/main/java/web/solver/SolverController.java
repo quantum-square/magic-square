@@ -71,7 +71,7 @@ public class SolverController {
             Long solverId = solverManager.create(boardDTO.getBoard(), solverType);
             ctx.json(new SolverIdDTO(solverId));
         } catch (BadRequestResponse ex) {
-            throw new ClientSideException("Invalid board parameter!");
+            throw new ClientSideException("Invalid board parameter! " + ex.getMessage());
         } catch (Exception ex) {
             throw new ServerSideException("Internal Server Error");
         }

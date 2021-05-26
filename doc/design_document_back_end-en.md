@@ -83,7 +83,7 @@ The main task of the Web module is to transfer data with the front-end page, acc
 
 The simple UML diagram of the Web module (contains only public fields and methods) is as follows:
 
-![UML-Core](image/UML-Core.png)
+![UML-Core](image/UML-Web.png)
 
 <br>
 
