@@ -11,6 +11,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import web.exception.ClientSideException;
+import web.exception.ServerSideException;
 import web.solver.SolverController;
 
 import java.util.function.Consumer;
@@ -33,6 +35,12 @@ public class SolverLauncher {
 
         Javalin app = Javalin.create(initConfig()).start(PORT);
 
+        handleRequest(app);
+
+        handleException(app);
+    }
+
+    private void handleRequest(Javalin app) {
         SolverController controller = new SolverController();
 
         app.get("/", controller.index);
@@ -54,6 +62,23 @@ public class SolverLauncher {
 
         app.ws("/syncBoard/:solverId", controller.acceptWs);
 
+    }
+
+    private void handleException(Javalin app) {
+        app.exception(ClientSideException.class, (e, ctx) -> {
+            ctx.status(400);
+            ctx.result(e.getMessage());
+        });
+
+        app.exception(ServerSideException.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.result(e.getMessage());
+        });
+
+//        app.exception(Exception.class, (e, ctx) -> {
+//            // handle general exceptions here
+//            // will not trigger if more specific exception-mapper found
+//        });
     }
 
     private OpenApiOptions getOpenApiOptions() {

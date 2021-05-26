@@ -1,11 +1,16 @@
 package web.solver;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import io.javalin.plugin.openapi.annotations.*;
 import io.javalin.websocket.WsHandler;
+import kotlin.jvm.functions.Function1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import core.model.SolverState;
+import web.exception.ClientSideException;
+import web.exception.ServerSideException;
 import web.model.BoardDTO;
 import web.model.SendFreqDTO;
 import web.model.SolverIdDTO;
@@ -42,14 +47,34 @@ public class SolverController {
                     description = "Two dimensional array."),
             responses = {
                     @OpenApiResponse(status = "200", content = @OpenApiContent(from = SolverIdDTO.class),
-                            description = "Solver created successfully")
+                            description = "Solver created successfully"),
+                    @OpenApiResponse(status = "400", content = @OpenApiContent(from = String.class),
+                            description = "Bad Request"),
+                    @OpenApiResponse(status = "500", content = @OpenApiContent(from = String.class),
+                            description = "Internal Server Error")
             }
     )
     public final Handler create = ctx -> {
         SolverType solverType = SolverType.valueOf(ctx.pathParam("solverType"));
-        BoardDTO boardDTO = ctx.bodyAsClass(BoardDTO.class);
-        Long solverId = solverManager.create(boardDTO.getBoard(), solverType);
-        ctx.json(new SolverIdDTO(solverId));
+        try {
+            BoardDTO boardDTO = ctx.bodyValidator(BoardDTO.class).check("board", boardDTOCheck -> {
+                if (boardDTOCheck == null) {
+                    return Boolean.FALSE;
+                } else {
+                    int[][] board = boardDTOCheck.getBoard();
+                    if (board == null || board.length == 0 || board[0].length != board.length) {
+                        return Boolean.FALSE;
+                    }
+                }
+                return Boolean.TRUE;
+            }).get();
+            Long solverId = solverManager.create(boardDTO.getBoard(), solverType);
+            ctx.json(new SolverIdDTO(solverId));
+        } catch (BadRequestResponse ex) {
+            throw new ClientSideException("Invalid board parameter!");
+        } catch (Exception ex) {
+            throw new ServerSideException("Internal Server Error");
+        }
     };
 
     @OpenApi(
@@ -145,7 +170,7 @@ public class SolverController {
             path = "/state/:solverId",
             method = HttpMethod.GET,
             responses = {
-                    @OpenApiResponse(status = "200", content =  @OpenApiContent(from = SolverState.class),
+                    @OpenApiResponse(status = "200", content = @OpenApiContent(from = SolverState.class),
                             description = "EMPTY means the core.solver does not exist")
             }
     )

@@ -2,7 +2,7 @@
 
 [English](./design_document_back_end-en.md)
 
-该项目为前后端分离项目，传输协议为 **HTTP**，API 接口设计遵循 **RESTful** 理论规范。
+该项目为前后端分离项目，传输协议为 **HTTP** 和 **WebSocket**，API 接口设计遵循 **RESTful** 理论规范。
 
 后端分为 **core** 模块和 **web** 模块，使用的编程语言为 **Java**。
 
@@ -25,6 +25,9 @@
 │  │  │     ├─MagicSquareSolver.java
 │  │  │     └─HeuristicUtils.java
 │  │  └─web
+│  │     ├─exception
+│  │     │  ├─ClientSideException.java
+│  │     │  └─ServerSideException.java
 │  │     ├─model
 │  │     │  ├─BoardDTO.java
 │  │     │  ├─SolverIdDTO.java
@@ -89,7 +92,9 @@ Web 模块简单的 UML 图（只包含 public 字段和方法）如下：
   - 创建新的解题器时产生一个全局唯一的解题器 ID
   - 可以通过解题器 ID 启动、暂停、停止解题器，以及同步矩阵数据
 + `SolverController` : 包含一些处理器，用于处理前端发来的请求，解析参数，同步结果。
-+ `SolverLauncher` : 解题器后端启动器，后端程序启动入口
-+ `BoardDTO` : 数据传输对象，用于前后端传输矩阵棋盘数据
-+ `SolverIdDTO` : 数据传输对象，用于前后端传输解题器 ID
-+ `SolverInfoDTO` : 数据传输对象，用于前后端传输解题器信息（包括解题器 ID， 解题器状态，矩阵棋盘数据）
++ `SolverLauncher` : 解题器后端启动器，后端程序启动入口。
++ `BoardDTO` : 数据传输对象，用于前后端传输矩阵棋盘数据。
++ `SolverIdDTO` : 数据传输对象，用于前后端传输解题器 ID。
++ `SolverInfoDTO` : 数据传输对象，用于前后端传输解题器信息（包括解题器 ID， 解题器状态，矩阵棋盘数据）。
++ `ClientSideException` : 客户端异常类。
++ `ServerSideException` : 服务器端异常类。

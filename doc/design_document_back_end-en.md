@@ -2,7 +2,7 @@
 
 [中文简体](./design_document_back_end-zh-cn.md)
 
-The project is a front-end and back-end separation project, the transmission protocol is **HTTP**, and the API interface design follows the **RESTful** theory specification.
+The project is a front-end and back-end separation project, the transmission protocol are **HTTP** and **WebSocket**, and the API interface design follows the **RESTful** theory specification.
 
 The back-end is divided into **core** module and **web** module, and the programming language used is **Java**.
 
@@ -25,6 +25,9 @@ The back-end is divided into **core** module and **web** module, and the program
 │  │  │     ├─MagicSquareSolver.java
 │  │  │     └─HeuristicUtils.java
 │  │  └─web
+│  │     ├─exception
+│  │     │  ├─ClientSideException.java
+│  │     │  └─ServerSideException.java
 │  │     ├─model
 │  │     │  ├─BoardDTO.java
 │  │     │  ├─SolverIdDTO.java
@@ -80,7 +83,7 @@ The main task of the Web module is to transfer data with the front-end page, acc
 
 The simple UML diagram of the Web module (contains only public fields and methods) is as follows:
 
-![UML-simple](image/UML-simple.png)
+![UML-Core](image/UML-Core.png)
 
 <br>
 
@@ -90,6 +93,8 @@ The simple UML diagram of the Web module (contains only public fields and method
   - The solver ID can be used to start, pause, stop the solver, and synchronize matrix data
 + `SolverController` : contains some handlers for handling requests from the front-end, parsing parameters, and synchronizing results.
 + `SolverLauncher` : solver back-end starter, back-end program start entry.
-+ `BoardDTO` : data transfer object, used to transfer matrix chessboard data between the front-end and back-end
-+ `SolverIdDTO` : data transfer object, used to transfer solver ID between the front-end and back-end
++ `BoardDTO` : data transfer object, used to transfer matrix chessboard data between the front-end and back-end.
++ `SolverIdDTO` : data transfer object, used to transfer solver ID between the front-end and back-end.
 + `SolverInfoDTO` : data transfer object, used to transfer the solver information (including solver ID, solver state, matrix chessboard data) between the front-end and back-end.
++ `ClientSideException` : Client Side Exception Class.
++ `ServerSideException` : Server Side Exception Class.
